@@ -33,12 +33,6 @@ jobs:
         uses: perl-actions/install-with-cpm@v2
         with:
           cpanfile: cpanfile
-          # Skip the snapshot resolver: install-with-cpm@v2 reaches into
-          # Carton::Snapshot to validate the file, and Carton isn't on
-          # the host perl tree yet at this point. The prod image still
-          # gets snapshot-pinned deps via cpm in Dockerfile.base; tests
-          # are happy with the latest compatible versions from metacpan.
-          snapshot: false
           tests: false
           # ubuntu-latest has 4 vCPUs; 1.5x oversubscription keeps all
           # cores busy while individual workers are waiting on the
