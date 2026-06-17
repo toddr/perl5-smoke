@@ -194,6 +194,10 @@ sub out_file ($c) {
 }
 
 sub not_found ($c) {
+    my $path = $c->req->url->path->to_string;
+    if ($path =~ m{^/(?:api|system)(?:/|$)}) {
+        return $c->render(status => 404, json => { error => 'Not found.' });
+    }
     return $c->render(status => 404, template => 'web/404');
 }
 

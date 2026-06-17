@@ -12,6 +12,21 @@ use TestApp;
 my $h = TestApp->new;
 my $t = $h->t;
 
-$t->get_ok('/no-such-page')->status_is(404);
+# Web paths: HTML 404
+$t->get_ok('/no-such-page')->status_is(404)
+    ->content_type_like(qr{text/html});
+
+# API paths: JSON 404
+$t->get_ok('/api/no-such-endpoint')->status_is(404)
+    ->content_type_like(qr{application/json})
+    ->json_is('/error' => 'Not found.');
+
+$t->get_ok('/api/report_data/99999999')->status_is(404)
+    ->json_is('/error' => 'Report not found.');
+
+# /system sub-paths: JSON 404
+$t->get_ok('/system/no-such-method')->status_is(404)
+    ->content_type_like(qr{application/json})
+    ->json_is('/error' => 'Not found.');
 
 done_testing;
