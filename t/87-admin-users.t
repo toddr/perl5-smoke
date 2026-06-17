@@ -88,4 +88,23 @@ subtest 'delete second user' => sub {
     ok !$h->app->auth->verify_user('operator', 'newoppass'), 'deleted user cannot log in';
 };
 
+subtest 'update password for non-existent user flashes error' => sub {
+    $t->post_ok("/admin/users/99999/password", form => {
+        password => 'ghostpass',
+    })->status_is(302);
+
+    $t->get_ok('/admin/users')
+      ->status_is(200)
+      ->content_like(qr/User not found/);
+};
+
+subtest 'delete non-existent user flashes error' => sub {
+    $t->post_ok("/admin/users/99999/delete")
+      ->status_is(302);
+
+    $t->get_ok('/admin/users')
+      ->status_is(200)
+      ->content_like(qr/User not found/);
+};
+
 done_testing;

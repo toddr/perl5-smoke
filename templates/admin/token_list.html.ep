@@ -12,6 +12,10 @@
 %   actions => $header_actions,
 % };
 
+% if (my $error = flash 'error') {
+  %= include 'components/alert', variant => 'danger', body => $error
+% }
+
 % if (!@$tokens) {
   %= include 'components/empty_state', title => 'No tokens yet', desc => 'Create your first API token to authenticate smoke report submissions.'
 % } else {

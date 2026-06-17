@@ -81,4 +81,30 @@ subtest 'cancel token' => sub {
        'cancelled token rejected by validate_token';
 };
 
+subtest 'cancel already-cancelled token flashes error' => sub {
+    my $tokens = $h->app->auth->list_tokens;
+    my $id = $tokens->[0]{id};
+
+    $t->post_ok("/admin/tokens/$id/cancel")
+      ->status_is(302);
+
+    $t->get_ok('/admin/tokens')
+      ->status_is(200)
+      ->content_like(qr/not found or already cancelled/i);
+};
+
+subtest 'cancel non-existent token flashes error' => sub {
+    $t->post_ok("/admin/tokens/99999/cancel")
+      ->status_is(302);
+
+    $t->get_ok('/admin/tokens')
+      ->status_is(200)
+      ->content_like(qr/not found or already cancelled/i);
+};
+
+subtest 'show non-existent token returns 404' => sub {
+    $t->get_ok("/admin/tokens/99999")
+      ->status_is(404);
+};
+
 done_testing;
