@@ -23,7 +23,10 @@ sub post_report ($c) {
 
     my $token_string = _extract_bearer_token($c);
     my $result = $c->app->ingest->post_report($data, api_token => $token_string);
-    return $c->render(status => 409, json => $result) if $result->{error};
+    if ($result->{error}) {
+        my $status = $result->{duplicate} ? 409 : 400;
+        return $c->render(status => $status, json => $result);
+    }
     return $c->render(json => $result);
 }
 

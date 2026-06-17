@@ -40,6 +40,11 @@ sub post_report ($self, $raw, %opts) {
 
     my ($data, $files) = $self->_normalize($raw);
 
+    # Validate required fields BEFORE writing anything to disk.
+    if (my $missing = $self->_missing_required_fields($data)) {
+        return { error => "Missing required field: $missing" };
+    }
+
     # Compute plevel + report_hash.
     $data->{plevel}      = CoreSmoke::Model::Plevel::from_git_describe(
         $data->{git_describe} // '',
@@ -80,12 +85,26 @@ sub post_report ($self, $raw, %opts) {
     };
     if (my $e = $@) {
         if ("$e" =~ /UNIQUE constraint failed/i) {
-            return { error => 'Report already posted.', db_error => "$e" };
+            return { error => 'Report already posted.', duplicate => 1, db_error => "$e" };
         }
         die $e;
     }
     $tx->commit;
     return { id => $rid };
+}
+
+# Required columns for the report table (excluding computed fields plevel,
+# report_hash, and sconfig_id which are filled in by post_report itself).
+my @REQUIRED_FIELDS = qw(
+    smoke_date perl_id git_id git_describe hostname
+    architecture osname osversion summary
+);
+
+sub _missing_required_fields ($self, $data) {
+    for my $f (@REQUIRED_FIELDS) {
+        return $f unless defined $data->{$f} && length $data->{$f};
+    }
+    return;
 }
 
 # ----------------------------------------------------------------------
@@ -178,12 +197,6 @@ sub _upsert_smoke_config ($self, $config) {
 
 sub _insert_report ($self, $data) {
     my @cols = grep { exists $data->{$_} && defined $data->{$_} } @REPORT_COLS;
-    # NOT NULL columns must always be present (ensure with sane defaults).
-    for my $must_have (qw(smoke_date perl_id git_id git_describe hostname architecture osname osversion summary plevel report_hash)) {
-        unless (grep { $_ eq $must_have } @cols) {
-            die "report.$must_have is required";
-        }
-    }
     my $placeholders = join ',', ('?') x @cols;
     my $colnames     = join ',', @cols;
     my @vals         = @{$data}{@cols};
