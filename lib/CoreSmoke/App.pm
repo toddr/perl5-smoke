@@ -274,17 +274,17 @@ sub startup ($self) {
     # /api REST
     $r->get('/api/version')                ->to('Api#version');
     $r->get('/api/latest')                 ->to('Api#latest');
-    $r->get('/api/full_report_data/:rid')  ->to('Api#full_report_data');
-    $r->get('/api/report_data/:rid')       ->to('Api#report_data');
-    $r->get('/api/logfile/:rid')           ->to('Api#logfile');
-    $r->get('/api/outfile/:rid')           ->to('Api#outfile');
-    $r->get('/api/outfle/:rid')            ->to('Api#outfile'); # legacy typo alias
+    $r->get('/api/full_report_data/:rid' => [rid => qr/\d+/])->to('Api#full_report_data');
+    $r->get('/api/report_data/:rid'      => [rid => qr/\d+/])->to('Api#report_data');
+    $r->get('/api/logfile/:rid'          => [rid => qr/\d+/])->to('Api#logfile');
+    $r->get('/api/outfile/:rid'          => [rid => qr/\d+/])->to('Api#outfile');
+    $r->get('/api/outfle/:rid'           => [rid => qr/\d+/])->to('Api#outfile');
     $r->get('/api/matrix')                 ->to('Api#matrix');
     $r->get('/api/submatrix')              ->to('Api#submatrix');
     $r->get('/api/searchparameters')       ->to('Api#searchparameters');
     $r->any([qw(GET POST)] => '/api/searchresults')->to('Api#searchresults');
-    $r->get('/api/reports_from_id/:rid')   ->to('Api#reports_from_id');
-    $r->get('/api/reports_from_date/:epoch')->to('Api#reports_from_epoch');
+    $r->get('/api/reports_from_id/:rid'    => [rid => qr/\d+/])->to('Api#reports_from_id');
+    $r->get('/api/reports_from_date/:epoch' => [epoch => qr/\d+/])->to('Api#reports_from_epoch');
 
     # OpenAPI
     $r->get('/api/openapi/web.json')->to('Api#openapi_json');
@@ -309,9 +309,9 @@ sub startup ($self) {
     $r->get('/matrix')->to('Web#matrix');
     $r->get('/submatrix')->to('Web#submatrix');
     $r->get('/about') ->to('Web#about');
-    $r->get('/report/:rid')          ->to('Web#full_report');
-    $r->get('/file/log_file/:rid')   ->to('Web#log_file');
-    $r->get('/file/out_file/:rid')   ->to('Web#out_file');
+    $r->get('/report/:rid'         => [rid => qr/\d+/])->to('Web#full_report');
+    $r->get('/file/log_file/:rid'  => [rid => qr/\d+/])->to('Web#log_file');
+    $r->get('/file/out_file/:rid'  => [rid => qr/\d+/])->to('Web#out_file');
 
     # Admin: public routes (login/logout)
     $r->get('/admin/login') ->to('Admin#login_page');
@@ -324,13 +324,13 @@ sub startup ($self) {
     $admin->get('/tokens')              ->to('Admin#token_list');
     $admin->get('/tokens/new')          ->to('Admin#token_new');
     $admin->post('/tokens')             ->to('Admin#token_create');
-    $admin->get('/tokens/:id')          ->to('Admin#token_show');
-    $admin->post('/tokens/:id/cancel')  ->to('Admin#token_cancel');
+    $admin->get('/tokens/:id'          => [id => qr/\d+/])->to('Admin#token_show');
+    $admin->post('/tokens/:id/cancel'  => [id => qr/\d+/])->to('Admin#token_cancel');
     $admin->get('/users')               ->to('Admin#user_list');
     $admin->get('/users/new')           ->to('Admin#user_new');
     $admin->post('/users')              ->to('Admin#user_create');
-    $admin->post('/users/:id/password') ->to('Admin#user_update_password');
-    $admin->post('/users/:id/delete')   ->to('Admin#user_delete');
+    $admin->post('/users/:id/password' => [id => qr/\d+/])->to('Admin#user_update_password');
+    $admin->post('/users/:id/delete'  => [id => qr/\d+/])->to('Admin#user_delete');
 
     # 404 fallback
     $r->any('/*whatever' => { whatever => '' })->to('Web#not_found');
