@@ -32,6 +32,7 @@ paths:
             application/json:
               schema:
                 type: object
+                required: [software_version]
                 properties:
                   software_version: { type: string, example: "2.0" }
 
@@ -41,11 +42,36 @@ paths:
       responses:
         "200":
           description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [app_version, app_name, active_since, hostname, running_pid]
+                properties:
+                  app_version:  { type: string, example: "2.0" }
+                  app_name:     { type: string, example: Perl 5 Core Smoke DB }
+                  active_since: { type: integer, description: Unix epoch when the process started }
+                  hostname:     { type: string }
+                  running_pid:  { type: integer }
+                  dancer2:      { type: string, description: Mojolicious version (legacy key name) }
+                  rpc_plugin:   { type: string }
 
   /system/methods:
     get:
       summary: List all RPC methods
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [methods]
+                properties:
+                  methods:
+                    type: array
+                    items: { type: string }
+                    example: [latest, logfile, matrix, ping, status, version]
 
   /system/methods/{plugin}:
     get:
@@ -53,26 +79,62 @@ paths:
       parameters:
         - in: path
           name: plugin
-          schema: { type: string }
+          schema: { type: string, enum: [system, api] }
           required: true
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [methods, plugin]
+                properties:
+                  methods:
+                    type: array
+                    items: { type: string }
+                  plugin: { type: string }
 
   /healthz:
     get:
       summary: Liveness probe (always 200)
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            text/plain:
+              schema: { type: string, example: "ok\n" }
 
   /readyz:
     get:
       summary: Readiness probe (200 only if DB is queryable)
       responses:
-        "200": { description: ready }
-        "503": { description: db unavailable }
+        "200":
+          description: ready
+          content:
+            text/plain:
+              schema: { type: string, example: "ready\n" }
+        "503":
+          description: db unavailable
+          content:
+            text/plain:
+              schema: { type: string, example: "db unavailable\n" }
 
   /api/version:
     get:
       summary: API + schema + DB version triple
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [version, schema_version, db_version]
+                properties:
+                  version:        { type: string, example: "2.0" }
+                  schema_version: { type: string, example: "4" }
+                  db_version:     { type: string, example: "4" }
 
   /api/latest:
     get:
@@ -83,8 +145,23 @@ paths:
           schema: { type: integer, default: 1 }
         - in: query
           name: reports_per_page
-          schema: { type: integer, default: 25 }
-      responses: { "200": { description: ok } }
+          schema: { type: integer, default: 25, maximum: 500 }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reports, report_count, latest_plevel, rpp, page]
+                properties:
+                  reports:
+                    type: array
+                    items: { $ref: "#/components/schemas/Report" }
+                  report_count:  { type: integer, description: Total matching reports }
+                  latest_plevel: { type: string, description: Highest plevel across all reports }
+                  rpp:           { type: integer, description: Reports per page (clamped) }
+                  page:          { type: integer }
 
   /api/full_report_data/{rid}:
     get:
@@ -95,8 +172,16 @@ paths:
           required: true
           schema: { type: integer }
       responses:
-        "200": { description: ok }
-        "404": { description: not found }
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FullReport" }
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /api/report_data/{rid}:
     get:
@@ -107,8 +192,16 @@ paths:
           required: true
           schema: { type: integer }
       responses:
-        "200": { description: ok }
-        "404": { description: not found }
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReportTree" }
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /api/logfile/{rid}:
     get:
@@ -119,8 +212,20 @@ paths:
           required: true
           schema: { type: integer }
       responses:
-        "200": { description: ok }
-        "404": { description: not found }
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [file]
+                properties:
+                  file: { type: string, description: Decompressed log file content }
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /api/outfile/{rid}:
     get:
@@ -131,13 +236,41 @@ paths:
           required: true
           schema: { type: integer }
       responses:
-        "200": { description: ok }
-        "404": { description: not found }
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [file]
+                properties:
+                  file: { type: string, description: Decompressed out file content }
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /api/matrix:
     get:
       summary: Failure matrix across the last 5 perl versions
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [perl_versions, rows]
+                properties:
+                  perl_versions:
+                    type: array
+                    items: { type: string }
+                    description: Up to 5 perl version strings, highest plevel first
+                    example: ["5.41.6", "5.41.5", "5.41.4"]
+                  rows:
+                    type: array
+                    items: { $ref: "#/components/schemas/MatrixRow" }
 
   /api/submatrix:
     get:
@@ -147,25 +280,137 @@ paths:
           name: test
           required: true
           schema: { type: string }
+          description: Test file path (e.g. t/op/magic.t)
         - in: query
           name: pversion
           schema: { type: string }
+          description: Optional perl version filter
       responses:
-        "200": { description: ok }
-        "422": { description: missing test param }
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:           { type: integer }
+                    perl_id:      { type: string }
+                    git_id:       { type: string }
+                    git_describe: { type: string }
+                    hostname:     { type: string }
+                    osname:       { type: string }
+                    osversion:    { type: string }
+                    plevel:       { type: string }
+        "422":
+          description: missing test param
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /api/searchparameters:
     get:
       summary: Filter dropdown data
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sel_arch_os_ver, sel_comp_ver, branches, perl_versions]
+                properties:
+                  sel_arch_os_ver:
+                    type: array
+                    description: Distinct (architecture, osname, osversion) triples
+                    items:
+                      type: object
+                      properties:
+                        architecture: { type: string }
+                        osname:       { type: string }
+                        osversion:    { type: string }
+                  sel_comp_ver:
+                    type: array
+                    description: Distinct (cc, ccversion) pairs
+                    items:
+                      type: object
+                      properties:
+                        cc:        { type: string }
+                        ccversion: { type: string }
+                  branches:
+                    type: array
+                    items: { type: string }
+                    description: Distinct smoke_branch values
+                  perl_versions:
+                    type: array
+                    items: { type: string }
+                    description: Distinct perl_id values, sorted by plevel descending
 
   /api/searchresults:
     get:
       summary: Search reports with filter and pagination
-      responses: { "200": { description: ok } }
+      parameters:
+        - in: query
+          name: selected_arch
+          schema: { type: string }
+        - in: query
+          name: selected_osnm
+          schema: { type: string }
+        - in: query
+          name: selected_osvs
+          schema: { type: string }
+        - in: query
+          name: selected_host
+          schema: { type: string }
+        - in: query
+          name: selected_comp
+          schema: { type: string }
+        - in: query
+          name: selected_cver
+          schema: { type: string }
+        - in: query
+          name: selected_perl
+          schema: { type: string }
+          description: '"all", "latest", or a specific perl_id'
+        - in: query
+          name: selected_branch
+          schema: { type: string }
+        - in: query
+          name: selected_smkv
+          schema: { type: string }
+        - in: query
+          name: selected_summary
+          schema: { type: string }
+          description: '"PASS", "FAIL(*)", "FAIL(F)", etc.'
+        - in: query
+          name: date_from
+          schema: { type: string, format: date }
+          description: Inclusive start date (YYYY-MM-DD)
+        - in: query
+          name: date_to
+          schema: { type: string, format: date }
+          description: Inclusive end date (YYYY-MM-DD)
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: reports_per_page
+          schema: { type: integer, default: 25, maximum: 500 }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SearchResults" }
     post:
       summary: Search reports with filter (POST)
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SearchResults" }
 
   /api/reports_from_id/{rid}:
     get:
@@ -177,8 +422,16 @@ paths:
           schema: { type: integer }
         - in: query
           name: limit
-          schema: { type: integer, default: 100 }
-      responses: { "200": { description: ok } }
+          schema: { type: integer, default: 100, minimum: 1, maximum: 500 }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: integer }
+                description: Report ids in ascending order
 
   /api/reports_from_date/{epoch}:
     get:
@@ -188,7 +441,15 @@ paths:
           name: epoch
           required: true
           schema: { type: integer }
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: integer }
+                description: Report ids with smoke_date >= epoch, ascending
 
   /api/report:
     post:
@@ -199,24 +460,72 @@ paths:
           application/json:
             schema:
               type: object
+              required: [report_data]
               properties:
-                report_data: { type: object }
+                report_data: { type: object, description: Test::Smoke report payload }
       responses:
-        "200": { description: ok }
-        "409": { description: duplicate }
-        "422": { description: missing report_data }
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IngestSuccess" }
+        "400":
+          description: malformed JSON
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: duplicate report
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: missing report_data
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /api/old_format_reports:
     post:
       summary: Ingest a Test::Smoke report (pre-1.81 form-encoded format)
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                json: { type: string, description: URL-encoded JSON report payload }
       responses:
-        "200": { description: ok }
-        "409": { description: duplicate }
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IngestSuccess" }
+        "400":
+          description: malformed JSON
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: duplicate report
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: missing json param
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /report:
     post:
       summary: Built-in alias for /api/old_format_reports (for proxy-less deploys)
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IngestSuccess" }
 
   /api:
     post:
@@ -225,8 +534,13 @@ paths:
         required: true
         content:
           application/json:
-            schema: { type: object }
-      responses: { "200": { description: ok } }
+            schema: { $ref: "#/components/schemas/JsonRpcRequest" }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/JsonRpcResponse" }
 
   /system:
     post:
@@ -235,20 +549,272 @@ paths:
         required: true
         content:
           application/json:
-            schema: { type: object }
-      responses: { "200": { description: ok } }
+            schema: { $ref: "#/components/schemas/JsonRpcRequest" }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/JsonRpcResponse" }
 
   /api/openapi/web.json:
     get:
       summary: This OpenAPI spec, as JSON
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { type: object }
 
   /api/openapi/web.yaml:
     get:
       summary: This OpenAPI spec, as YAML
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/yaml:
+              schema: { type: string }
 
   /api/openapi/web:
     get:
       summary: This OpenAPI spec, as plain text
-      responses: { "200": { description: ok } }
+      responses:
+        "200":
+          description: ok
+          content:
+            text/plain:
+              schema: { type: string }
+
+components:
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+
+    IngestSuccess:
+      type: object
+      required: [id]
+      properties:
+        id: { type: integer, description: Newly created report id }
+
+    Report:
+      type: object
+      description: A smoke test report row from the database
+      required: [id, smoke_date, perl_id, git_id, git_describe, hostname,
+                 architecture, osname, osversion, summary, plevel, report_hash]
+      properties:
+        id:               { type: integer }
+        sconfig_id:       { type: integer, nullable: true }
+        duration:         { type: integer, nullable: true, description: Total duration in seconds }
+        config_count:     { type: integer, nullable: true }
+        reporter:         { type: string, nullable: true }
+        reporter_version: { type: string, nullable: true }
+        smoke_perl:       { type: string, nullable: true }
+        smoke_revision:   { type: string, nullable: true }
+        smoke_version:    { type: string, nullable: true }
+        smoker_version:   { type: string, nullable: true }
+        smoke_date:       { type: string, description: ISO 8601 UTC timestamp }
+        perl_id:          { type: string, example: "5.41.6" }
+        git_id:           { type: string, description: Git SHA }
+        git_describe:     { type: string, example: v5.41.6-42-gabcdef0 }
+        applied_patches:  { type: string, nullable: true }
+        hostname:         { type: string }
+        architecture:     { type: string, example: x86_64 }
+        osname:           { type: string, example: linux }
+        osversion:        { type: string, example: "6.5.0" }
+        cpu_count:        { type: string, nullable: true }
+        cpu_description:  { type: string, nullable: true }
+        username:         { type: string, nullable: true }
+        test_jobs:        { type: string, nullable: true }
+        lc_all:           { type: string, nullable: true }
+        lang:             { type: string, nullable: true }
+        user_note:        { type: string, nullable: true }
+        skipped_tests:    { type: string, nullable: true }
+        harness_only:     { type: string, nullable: true }
+        harness3opts:     { type: string, nullable: true }
+        summary:          { type: string, example: PASS }
+        smoke_branch:     { type: string, default: blead }
+        plevel:           { type: string, description: Sortable perl level string }
+        report_hash:      { type: string, description: MD5 hash for dedup and file lookup }
+        api_token_id:     { type: integer, nullable: true }
+
+    Config:
+      type: object
+      description: A build configuration within a report
+      required: [id, report_id, arguments, debugging]
+      properties:
+        id:        { type: integer }
+        report_id: { type: integer }
+        arguments: { type: string }
+        debugging: { type: string }
+        started:   { type: string, nullable: true }
+        duration:  { type: integer, nullable: true }
+        cc:        { type: string, nullable: true, description: Compiler name }
+        ccversion: { type: string, nullable: true, description: Compiler version }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/Result" }
+
+    Result:
+      type: object
+      description: A test result for one IO environment within a config
+      required: [id, config_id, io_env, summary]
+      properties:
+        id:            { type: integer }
+        config_id:     { type: integer }
+        io_env:        { type: string, description: IO environment (e.g. perlio, stdio, locale) }
+        locale:        { type: string, nullable: true }
+        summary:       { type: string, description: Single-char summary (O, F, X, etc.) }
+        statistics:    { type: string, nullable: true }
+        stat_cpu_time: { type: number, nullable: true }
+        stat_tests:    { type: integer, nullable: true }
+        failures:
+          type: array
+          items: { $ref: "#/components/schemas/Failure" }
+
+    Failure:
+      type: object
+      description: A test failure linked to a result
+      properties:
+        test:   { type: string, description: Test file path }
+        status: { type: string, description: Failure status code }
+        extra:  { type: string, nullable: true }
+
+    ReportTree:
+      description: Report with nested configs, results, and failures
+      allOf:
+        - $ref: "#/components/schemas/Report"
+        - type: object
+          properties:
+            configs:
+              type: array
+              items: { $ref: "#/components/schemas/Config" }
+            _config:
+              type: object
+              nullable: true
+              description: smoke_config row if sconfig_id is set
+              properties:
+                md5:    { type: string }
+                config: { type: string, nullable: true }
+
+    FullReport:
+      description: Fully expanded report with computed display fields
+      allOf:
+        - $ref: "#/components/schemas/ReportTree"
+        - type: object
+          properties:
+            authenticated:
+              type: boolean
+              description: Whether the report was submitted with a valid API token
+            token_note:  { type: string }
+            token_email: { type: string }
+            c_compilers:
+              type: array
+              description: Deduplicated compiler pairs from configs
+              items:
+                type: object
+                properties:
+                  cc:        { type: string, nullable: true }
+                  ccversion: { type: string, nullable: true }
+            io_labels:
+              type: array
+              items: { type: string }
+              description: Union of io_env+locale labels across all configs
+            matrix_rows:
+              type: array
+              description: Per-config summary matrix for display
+              items:
+                type: object
+                properties:
+                  arguments: { type: string }
+                  debugging: { type: string, nullable: true }
+                  cc:        { type: string, nullable: true }
+                  ccversion: { type: string, nullable: true }
+                  duration:  { type: integer, nullable: true }
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        io_env:  { type: string }
+                        locale:  { type: string, nullable: true }
+                        label:   { type: string }
+                        summary: { type: string }
+            test_failures:
+              type: array
+              description: Failures grouped by test name
+              items:
+                type: object
+                properties:
+                  test:   { type: string }
+                  status: { type: string }
+                  extra:  { type: string, nullable: true }
+                  configs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        arguments: { type: string }
+                        debugging: { type: string, nullable: true }
+                        io_env:    { type: string }
+                        locale:    { type: string, nullable: true }
+            compiler_msgs_text:  { type: string, nullable: true }
+            manifest_msgs_text:  { type: string, nullable: true }
+            nonfatal_msgs_text:  { type: string, nullable: true }
+            has_log_file: { type: integer, description: "1 if log_file exists on disk, 0 otherwise" }
+            has_out_file: { type: integer, description: "1 if out_file exists on disk, 0 otherwise" }
+            durations:        { type: integer, description: Sum of config durations in seconds }
+            duration_in_hhmm: { type: string, example: "1:05" }
+            average_in_hhmm:  { type: string, example: "0:12" }
+
+    MatrixRow:
+      type: object
+      description: >
+        One row in the failure matrix. Has a fixed `test` key plus dynamic
+        keys named after each perl_id column.
+      required: [test]
+      properties:
+        test: { type: string, description: Failing test file path }
+      additionalProperties:
+        type: object
+        description: Per-perl-version failure data (key is the perl_id string)
+        properties:
+          cnt: { type: integer, description: Number of failure occurrences }
+          alt: { type: string, description: Semicolon-joined "osname-osversion" pairs }
+
+    SearchResults:
+      type: object
+      required: [reports, report_count, page, reports_per_page]
+      properties:
+        reports:
+          type: array
+          items: { $ref: "#/components/schemas/Report" }
+        report_count:     { type: integer, description: Total matching reports }
+        page:             { type: integer }
+        reports_per_page: { type: integer }
+
+    JsonRpcRequest:
+      type: object
+      required: [jsonrpc, method]
+      properties:
+        jsonrpc: { type: string, enum: ["2.0"] }
+        method:  { type: string, description: Method name (e.g. latest, matrix, version) }
+        params:  { type: object, description: Method-specific parameters }
+        id:      { description: Request id (string or integer) }
+
+    JsonRpcResponse:
+      type: object
+      required: [jsonrpc, id]
+      properties:
+        jsonrpc: { type: string, enum: ["2.0"] }
+        result:  { description: Method return value (type varies by method) }
+        error:
+          type: object
+          properties:
+            code:    { type: integer }
+            message: { type: string }
+        id: { description: Echoed request id }
