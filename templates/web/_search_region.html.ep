@@ -101,7 +101,7 @@
 % }
   </form>
 
-  %= include 'components/pagination_summary', shown => scalar @{ $results->{reports} }, total => $results->{report_count}, noun => 'reports'
+  %= include 'components/pagination_summary', shown => scalar @{ $results->{reports} }, total => $results->{report_count}, noun => 'reports', id => 'search-summary'
 
 % if (!@{ $results->{reports} }) {
   %= include 'components/empty_state', title => 'No reports match your filters', desc => 'Try clearing one or more filters above, or reset everything to start over.', icon => '&empty;', actions => begin

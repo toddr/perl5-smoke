@@ -68,6 +68,8 @@ sub latest ($c) {
         # On a full page load the OOB markup would duplicate the
         # inline element.
         oob_summary      => $is_htmx && !$is_form_change,
+        summary_id       => 'latest-summary',
+        summary_noun     => 'hosts',
         stats            => \%stats,
     );
 }
@@ -117,6 +119,9 @@ sub search ($c) {
             page             => $page,
             reports_per_page => $rpp,
             filter           => \%filter,
+            oob_summary      => 1,
+            summary_id       => 'search-summary',
+            summary_noun     => 'reports',
         );
     }
 
