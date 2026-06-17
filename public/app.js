@@ -253,6 +253,13 @@
     });
   }
 
+  /* ---------- Confirm before destructive form submit ---------- */
+  document.addEventListener('submit', function (e) {
+    var msg = e.target.getAttribute('data-confirm');
+    if (!msg) return;
+    if (!confirm(msg)) e.preventDefault();
+  });
+
   /* ---------- Matrix checkbox auto-submit ---------- */
   document.addEventListener('change', function (e) {
     if (e.target.matches('.matrix-filter input[type="checkbox"]')) {

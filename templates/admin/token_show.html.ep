@@ -40,7 +40,7 @@
 </div>
 
 % unless ($cancelled) {
-<form method="POST" action="/admin/tokens/<%= $token->{id} %>/cancel">
-  <button type="submit" class="btn btn-danger" onclick="return confirm('Cancel this token? Reports using it will land as unauthenticated.')">Cancel token</button>
+<form method="POST" action="/admin/tokens/<%= $token->{id} %>/cancel" data-confirm="Cancel this token? Reports using it will land as unauthenticated.">
+  <button type="submit" class="btn btn-danger">Cancel token</button>
 </form>
 % }

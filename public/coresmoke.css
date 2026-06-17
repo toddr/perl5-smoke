@@ -1519,6 +1519,11 @@ body.density-compact .data-table td { padding: var(--space-2) var(--space-3); fo
 }
 
 /* ============================================================
+   UTILITY: inline form (for forms inside table cells / inline context)
+   ============================================================ */
+.inline-form { display: inline; }
+
+/* ============================================================
    UTILITY: divider
    ============================================================ */
 .divider {
