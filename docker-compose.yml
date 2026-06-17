@@ -12,4 +12,8 @@ services:
       SMOKE_DB_PATH: /data/smoke.db
       SMOKE_REPORTS_DIR: /data/reports
       TZ: UTC
+      # SECURITY: set these before deploying. Default placeholders trigger
+      # a startup warning and leave admin sessions forgeable.
+      # SMOKE_SESSION_SECRET: <random-64-char-hex>
+      # SMOKE_ADMIN_SALT: <random-64-char-hex>
     restart: unless-stopped

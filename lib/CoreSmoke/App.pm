@@ -19,6 +19,8 @@ sub startup ($self) {
 
     $self->secrets($cfg->{secrets}) if $cfg->{secrets};
 
+    $self->_warn_default_secrets($cfg) if $self->mode eq 'production';
+
     my $home = $self->home;
     my $db_path     = _resolve_path($home, $ENV{SMOKE_DB_PATH}     // $cfg->{db_path}     // 'data/smoke.db');
     my $reports_dir = _resolve_path($home, $ENV{SMOKE_REPORTS_DIR} // $cfg->{reports_dir} // 'data/reports');
@@ -334,6 +336,31 @@ sub startup ($self) {
 
     # 404 fallback
     $r->any('/*whatever' => { whatever => '' })->to('Web#not_found');
+}
+
+my @_DEFAULT_PLACEHOLDERS = (
+    'change-me-in-production',
+    'dev-secret-not-for-production',
+    'dev-pepper-not-for-production',
+);
+
+sub _warn_default_secrets ($self, $cfg) {
+    my %placeholders = map { $_ => 1 } @_DEFAULT_PLACEHOLDERS;
+    my @warnings;
+
+    my $secrets = $cfg->{secrets} // [];
+    if (!@$secrets || $placeholders{ $secrets->[0] // '' }) {
+        push @warnings, 'SMOKE_SESSION_SECRET is a default placeholder — admin sessions can be forged';
+    }
+
+    my $salt = $cfg->{admin_secret_salt} // '';
+    if ($placeholders{$salt}) {
+        push @warnings, 'SMOKE_ADMIN_SALT is a default placeholder — password hashes are weaker without a unique pepper';
+    }
+
+    for my $msg (@warnings) {
+        $self->log->warn("SECURITY: $msg. Set the env var before deploying.");
+    }
 }
 
 sub _config_file ($self) {
