@@ -12,8 +12,6 @@ requires 'Mojolicious::Plugin::Config';
 requires 'JSON::PP',              '>= 4.16';
 requires 'Digest::MD5';
 requires 'Date::Parse';
-requires 'DateTime';
-requires 'DateTime::Format::SQLite';
 
 # request gzip + on-disk xz files
 requires 'IO::Compress::Gzip';
