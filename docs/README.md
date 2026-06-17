@@ -6,8 +6,13 @@ Current-state knowledge base. For terse rules + gotchas see
 
 ## Index
 
-- `architecture/` &mdash; request flow, DB schema, ingest pipeline,
-  JSONRPC dispatch, htmx integration. (Skeleton, growing.)
+- `architecture/`
+  - [`request-flow.md`](architecture/request-flow.md) &mdash; HTTP
+    lifecycle, route map, HTMX dispatch, JSONRPC, security headers.
+  - [`schema.md`](architecture/schema.md) &mdash; all tables, columns,
+    constraints, indexes, entity relationships, on-disk file layout.
+  - [`ingest-pipeline.md`](architecture/ingest-pipeline.md) &mdash;
+    wire formats, normalization, plevel, dedup, file storage.
 - `conventions/`
   - [`design-system.md`](conventions/design-system.md) &mdash; UI
     components, tokens, helpers/partials, dark mode, HTMX recipes.
