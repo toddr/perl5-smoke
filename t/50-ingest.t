@@ -48,6 +48,9 @@ is $h->app->report_files->read($rid, 'log_file'), undef,
 $t->post_ok('/api/report', json => { report_data => $h->fixture('idefix-gff5bbe677.jsn') })
   ->status_is(409)
   ->json_is('/error' => 'Report already posted.');
+# db_error must not leak internal schema/path details to clients
+ok !exists $t->tx->res->json->{db_error},
+   'duplicate response does not expose db_error';
 
 # Configs / results / failures linked correctly
 my $configs = $h->app->sqlite->db->query(

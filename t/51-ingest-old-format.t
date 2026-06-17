@@ -70,10 +70,12 @@ $t->post_ok('/api/old_format_reports' =>
     form => { }
 )->status_is(422);
 
-# Bad JSON in form param
+# Bad JSON in form param -- error must not leak internal file paths
 $t->post_ok('/api/old_format_reports' =>
     { 'Content-Type' => 'application/x-www-form-urlencoded' } =>
     form => { json => 'not-json{' }
-)->status_is(400);
+)->status_is(400)
+  ->json_like('/error' => qr/Bad JSON/)
+  ->json_unlike('/error' => qr{lib/CoreSmoke|\.pm line \d+});
 
 done_testing;

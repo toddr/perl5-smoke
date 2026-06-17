@@ -80,7 +80,7 @@ sub post_report ($self, $raw, %opts) {
     };
     if (my $e = $@) {
         if ("$e" =~ /UNIQUE constraint failed/i) {
-            return { error => 'Report already posted.', db_error => "$e" };
+            return { error => 'Report already posted.' };
         }
         die $e;
     }

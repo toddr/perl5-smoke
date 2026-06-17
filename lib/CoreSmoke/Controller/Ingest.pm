@@ -34,7 +34,10 @@ sub _extract_report_data ($c) {
         my $raw = $c->req->param('json')
             // return (undef, 'Missing json param.', 422);
         my $data = eval { decode_json($raw) };
-        return (undef, "Bad JSON in 'json' param: $@", 400) if $@;
+        if ($@) {
+            (my $detail = "$@") =~ s/ at \S+ line \d+\.?\s*$//;
+            return (undef, "Bad JSON in 'json' param: $detail", 400);
+        }
         return ($data, undef, undef);
     }
 
