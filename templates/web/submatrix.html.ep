@@ -1,9 +1,11 @@
 % layout 'default';
 % use Mojo::Util 'xml_escape';
 % title "Failures for " . ($test // 'unknown');
+% my $include_stdio = stash('include_stdio') // 0;
+% my $matrix_href = $include_stdio ? '/matrix?include_stdio=1' : '/matrix';
 % my @crumbs = (
 %   { label => 'Home',   href => '/' },
-%   { label => 'Matrix', href => '/matrix' },
+%   { label => 'Matrix', href => $matrix_href },
 % );
 % if (defined $test && length $test) {
 %   push @crumbs, { label => $test };

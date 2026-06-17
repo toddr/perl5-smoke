@@ -147,15 +147,18 @@ sub matrix ($c) {
 }
 
 sub submatrix ($c) {
-    my $test     = $c->param('test');
-    my $pversion = $c->param('pversion');
-    my $reports  = defined $test
-        ? $c->app->reports->submatrix($test, $pversion)
+    my $test          = $c->param('test');
+    my $pversion      = $c->param('pversion');
+    my $include_stdio = $c->param('include_stdio') ? 1 : 0;
+    my $reports       = defined $test
+        ? $c->app->reports->submatrix($test, $pversion,
+              include_stdio => $include_stdio)
         : [];
     return $c->render(template => 'web/submatrix',
-        test     => $test,
-        pversion => $pversion,
-        reports  => $reports,
+        test          => $test,
+        pversion      => $pversion,
+        include_stdio => $include_stdio,
+        reports       => $reports,
     );
 }
 

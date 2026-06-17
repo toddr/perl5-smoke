@@ -30,7 +30,7 @@
 % for my $row (@$rows) {
     <tr>
       <td class="matrix-test">
-        <a href="/submatrix?test=<%= url_escape $row->{test} %>"><%= $row->{test} %></a>
+        <a href="/submatrix?test=<%= url_escape $row->{test} %><%= $include_stdio ? '&include_stdio=1' : '' %>"><%= $row->{test} %></a>
       </td>
 % for my $v (@$perl_versions) {
 %   my $cell = $row->{$v};
@@ -39,7 +39,7 @@
 %     my $ratio = heatmap_ratio($cnt);
 %     my $intense = $ratio >= 55 ? ' intense' : '';
       <td class="heatmap-cell heatmap-fail<%= $intense %>" style="--ratio: <%= $ratio %>%" title="<%= $cnt %> failure(s)">
-        <a href="/submatrix?test=<%= url_escape $row->{test} %>&amp;pversion=<%= $v %>"><%= commify($cnt) %></a>
+        <a href="/submatrix?test=<%= url_escape $row->{test} %>&amp;pversion=<%= $v %><%= $include_stdio ? '&amp;include_stdio=1' : '' %>"><%= commify($cnt) %></a>
       </td>
 %   } else {
       <td class="heatmap-cell heatmap-zero">0</td>

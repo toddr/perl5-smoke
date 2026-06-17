@@ -150,6 +150,10 @@ paths:
         - in: query
           name: pversion
           schema: { type: string }
+        - in: query
+          name: include_stdio
+          schema: { type: integer, enum: [0, 1] }
+          description: Include stdio environment failures (default 0)
       responses:
         "200": { description: ok }
         "422": { description: missing test param }

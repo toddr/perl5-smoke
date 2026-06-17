@@ -88,7 +88,12 @@ sub _list_methods ($c, $params) {
     matrix    => { plugin => 'api', call => sub ($c, $p) { $c->app->reports->matrix } },
     submatrix => {
         plugin => 'api',
-        call   => sub ($c, $p) { $c->app->reports->submatrix($p->{test}, $p->{pversion}) },
+        call   => sub ($c, $p) {
+            $c->app->reports->submatrix(
+                $p->{test}, $p->{pversion},
+                include_stdio => ($p->{include_stdio} ? 1 : 0),
+            );
+        },
     },
     searchparameters => {
         plugin => 'api',

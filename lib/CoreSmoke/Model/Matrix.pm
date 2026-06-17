@@ -78,27 +78,32 @@ sub _row_total ($row) {
 }
 
 # Reports failing one specific test. Optional pversion narrows the result.
-sub submatrix ($self, $test, $pversion = undef) {
+sub submatrix ($self, $test, $pversion = undef, %opts) {
     my $db = $self->{sqlite}->db;
 
-    my $sql = <<~'SQL';
-        SELECT DISTINCT
-               r.id, r.perl_id, r.git_id, r.git_describe,
-               r.hostname, r.osname, r.osversion, r.plevel
+    my $stdio_pred   = $opts{include_stdio} ? '' : "AND rs.io_env <> 'stdio'";
+    my $pversion_pred = '';
+    my @bind = ($test);
+    if (defined $pversion && length $pversion) {
+        $pversion_pred = 'AND r.perl_id = ?';
+        push @bind, $pversion;
+    }
+
+    my $sql = <<~"SQL";
+        SELECT r.id, r.perl_id, r.git_id, r.git_describe,
+               r.hostname, r.osname, r.osversion, r.plevel,
+               r.smoke_date
           FROM report          r
           JOIN config          c   ON c.report_id  = r.id
           JOIN result          rs  ON rs.config_id = c.id
           JOIN failures_for_env ffe ON ffe.result_id = rs.id
           JOIN failure         f   ON f.id          = ffe.failure_id
          WHERE f.test = ?
+           $stdio_pred
+           $pversion_pred
+         GROUP BY r.id
+         ORDER BY r.plevel DESC, r.smoke_date DESC
         SQL
-
-    my @bind = ($test);
-    if (defined $pversion && length $pversion) {
-        $sql .= " AND r.perl_id = ?";
-        push @bind, $pversion;
-    }
-    $sql .= " ORDER BY r.plevel DESC, r.smoke_date DESC";
 
     return $db->query($sql, @bind)->hashes->to_array;
 }
