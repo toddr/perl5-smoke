@@ -502,8 +502,11 @@ sub reports_from_id ($self, $rid, $limit = 100) {
     ];
 }
 
-sub reports_from_epoch ($self, $epoch) {
-    # Convert the epoch into ISO 8601 UTC TEXT for comparison.
+sub reports_from_epoch ($self, $epoch, $limit = 100) {
+    $limit = int($limit || 100);
+    $limit = 1   if $limit < 1;
+    $limit = 500 if $limit > 500;
+
     my @t  = gmtime($epoch);
     my $iso = sprintf '%04d-%02d-%02dT%02d:%02d:%02dZ',
         $t[5] + 1900, $t[4] + 1, $t[3], $t[2], $t[1], $t[0];
@@ -511,8 +514,8 @@ sub reports_from_epoch ($self, $epoch) {
     return [
         map { $_->{id} }
         @{ $self->{sqlite}->db->query(
-            "SELECT id FROM report WHERE smoke_date >= ? ORDER BY id",
-            $iso
+            "SELECT id FROM report WHERE smoke_date >= ? ORDER BY id LIMIT ?",
+            $iso, $limit
         )->hashes->to_array }
     ];
 }

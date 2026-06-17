@@ -98,4 +98,18 @@ $t->get_ok("/api/reports_from_date/$future_epoch")
   ->status_is(200);
 is_deeply $t->tx->res->json, [], 'future epoch returns empty array';
 
+# ---- reports_from_date limit parameter -----------------------------------
+
+$t->get_ok("/api/reports_from_date/$old_epoch?limit=1")
+  ->status_is(200);
+is scalar @{ $t->tx->res->json }, 1, 'reports_from_date limit=1 returns one report';
+
+$t->get_ok("/api/reports_from_date/$old_epoch?limit=999")
+  ->status_is(200);
+is scalar @{ $t->tx->res->json }, 2, 'reports_from_date limit>500 clamped, still returns both';
+
+$t->get_ok("/api/reports_from_date/$old_epoch?limit=-5")
+  ->status_is(200);
+is scalar @{ $t->tx->res->json }, 1, 'reports_from_date negative limit clamped to 1';
+
 done_testing;

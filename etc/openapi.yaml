@@ -182,12 +182,15 @@ paths:
 
   /api/reports_from_date/{epoch}:
     get:
-      summary: Report ids since a Unix epoch
+      summary: Report ids since a Unix epoch (capped by limit)
       parameters:
         - in: path
           name: epoch
           required: true
           schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 100 }
       responses: { "200": { description: ok } }
 
   /api/report:
