@@ -169,6 +169,23 @@ my $s     = CoreSmoke::Model::Search->new(sqlite => $sqlite);
     is_deeply $bind, ['UNKNOWN'], 'negated unknown bind unchanged';
 }
 
+# summary: GLOB metacharacters in FAIL(...) fall through to safe equality
+{
+    my ($from, $where, $bind) = $s->compile({ selected_summary => 'FAIL([FM])' });
+    like $where, qr/r\.summary = \?/, 'GLOB brackets fall through to equality';
+    is_deeply $bind, ['FAIL([FM])'], 'brackets: raw value used in equality';
+}
+{
+    my ($from, $where, $bind) = $s->compile({ selected_summary => 'FAIL(??)' });
+    like $where, qr/r\.summary = \?/, 'GLOB single-char wildcards fall through';
+    is_deeply $bind, ['FAIL(??)'], 'wildcards: raw value used in equality';
+}
+{
+    my ($from, $where, $bind) = $s->compile({ selected_summary => 'FAIL(F*M)' });
+    like $where, qr/r\.summary = \?/, 'GLOB star in FAIL() falls through';
+    is_deeply $bind, ['FAIL(F*M)'], 'star: raw value used in equality';
+}
+
 # AND/NOT inversion on branch flips to inequality
 {
     my ($from, $where, $bind) = $s->compile({

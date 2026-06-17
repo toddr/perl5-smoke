@@ -106,7 +106,7 @@ sub compile ($self, $params) {
             push @where, "r.summary ${neg}GLOB ?";
             push @bind, 'FAIL(*';
         }
-        elsif ($sum =~ /^FAIL\((.+)\)$/) {
+        elsif ($sum =~ /^FAIL\(([A-Za-z]+)\)$/) {
             push @where, "r.summary ${neg}GLOB ?";
             push @bind, "FAIL(*$1*)";
         }
