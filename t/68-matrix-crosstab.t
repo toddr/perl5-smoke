@@ -213,4 +213,36 @@ my $sub_pv = $m->submatrix('op/magic.t', 'v5.40.0');
 is scalar @$sub_pv, 1, 'submatrix filtered by pversion returns 1';
 is $sub_pv->[0]{perl_id}, 'v5.40.0', 'filtered submatrix has correct perl_id';
 
+# =========================================================================
+# Test 5: perl_versions ordering with multiple plevels per perl_id
+# =========================================================================
+# When the same perl_id has multiple plevels (different git commits), the
+# matrix must pick the highest plevel per perl_id for ordering. This
+# verifies the GROUP BY + MAX(plevel) approach works correctly.
+
+$db->query(<<~'SQL',
+    INSERT INTO report
+        (perl_id, plevel, osname, osversion, hostname, architecture,
+         git_id, git_describe, smoke_date, summary, report_hash)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), 'FAIL', ?)
+    SQL
+    'v5.40.0', '5.040000zzz099',
+    'linux', '6.5', 'buildbot-b', 'x86_64',
+    'fff9999', 'v5.40.0-99-gfff9999',
+    'fff9999_hash',
+);
+my $new_rid = $db->dbh->last_insert_id(undef, undef, 'report', undef);
+$db->query("INSERT INTO config (report_id, arguments, debugging) VALUES (?, '', 'N')", $new_rid);
+my $new_cid = $db->dbh->last_insert_id(undef, undef, 'config', undef);
+$db->query("INSERT INTO result (config_id, io_env, summary) VALUES (?, 'perlio', 'F')", $new_cid);
+my $new_resid = $db->dbh->last_insert_id(undef, undef, 'result', undef);
+$db->query("INSERT INTO failures_for_env (result_id, failure_id) VALUES (?, ?)",
+    $new_resid, $fid{'op/magic.t'});
+
+my $mat_multi = $m->matrix;
+is $mat_multi->{perl_versions}[0], 'v5.42.0',
+    'v5.42.0 still first despite v5.40.0 having a high plevel commit';
+is $mat_multi->{perl_versions}[1], 'v5.40.0',
+    'v5.40.0 second (MAX plevel 5.040000zzz099 < 5.042000zzz000)';
+
 done_testing;

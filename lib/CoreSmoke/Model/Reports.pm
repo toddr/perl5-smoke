@@ -311,7 +311,8 @@ sub searchparameters ($self) {
         perl_versions => [
             map { $_->{perl_id} }
             @{ $db->query(<<~'SQL')->hashes->to_array }
-                SELECT DISTINCT perl_id FROM report ORDER BY plevel DESC
+                SELECT perl_id FROM report
+                 GROUP BY perl_id ORDER BY MAX(plevel) DESC
                 SQL
         ],
     };

@@ -25,8 +25,9 @@ sub matrix ($self, %opts) {
     my $perl_versions = [
         map { $_->{perl_id} }
         @{ $db->query(<<~'SQL')->hashes->to_array }
-            SELECT DISTINCT perl_id FROM report
-             ORDER BY plevel DESC LIMIT 5
+            SELECT perl_id FROM report
+             GROUP BY perl_id
+             ORDER BY MAX(plevel) DESC LIMIT 5
             SQL
     ];
 
