@@ -29,6 +29,12 @@
     %= btn_link 'Back to matrix', '/matrix', 'secondary', 'sm'
   % end
 % } else {
+% my $clamped = do { my $l = int($limit || 100); $l < 1 ? 1 : $l > 500 ? 500 : $l };
+% if (scalar @$reports >= $clamped) {
+  %= include 'components/alert', variant => 'info', body => begin
+    Showing first <%= $clamped %> results. Narrow with a <code>pversion</code> filter or raise <code>limit</code> (max 500).
+  % end
+% }
   %= include 'components/data_table', headers => ['Perl', 'git_describe', 'Host', 'OS'], body => begin
 % for my $r (@$reports) {
     <tr>

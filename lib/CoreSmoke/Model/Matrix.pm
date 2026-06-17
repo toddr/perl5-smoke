@@ -78,7 +78,11 @@ sub _row_total ($row) {
 }
 
 # Reports failing one specific test. Optional pversion narrows the result.
-sub submatrix ($self, $test, $pversion = undef) {
+sub submatrix ($self, $test, $pversion = undef, $limit = 100) {
+    $limit = int($limit || 100);
+    $limit = 1   if $limit < 1;
+    $limit = 500 if $limit > 500;
+
     my $db = $self->{sqlite}->db;
 
     my $sql = <<~'SQL';
@@ -98,7 +102,8 @@ sub submatrix ($self, $test, $pversion = undef) {
         $sql .= " AND r.perl_id = ?";
         push @bind, $pversion;
     }
-    $sql .= " ORDER BY r.plevel DESC, r.smoke_date DESC";
+    $sql .= " ORDER BY r.plevel DESC, r.smoke_date DESC LIMIT ?";
+    push @bind, $limit;
 
     return $db->query($sql, @bind)->hashes->to_array;
 }

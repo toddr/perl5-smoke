@@ -50,7 +50,9 @@ sub matrix ($c) {
 sub submatrix ($c) {
     my $test = $c->param('test')
         // return $c->render(status => 422, json => { error => 'Missing test param.' });
-    return $c->render(json => $c->app->reports->submatrix($test, $c->param('pversion')));
+    return $c->render(json => $c->app->reports->submatrix(
+        $test, $c->param('pversion'), $c->param('limit') // 100,
+    ));
 }
 
 sub searchparameters ($c) {

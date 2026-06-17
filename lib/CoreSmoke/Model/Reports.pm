@@ -485,8 +485,8 @@ sub matrix ($self, %opts) {
     return $self->_matrix->matrix(%opts);
 }
 
-sub submatrix ($self, $test, $pversion = undef) {
-    return $self->_matrix->submatrix($test, $pversion);
+sub submatrix ($self, $test, $pversion = undef, $limit = 100) {
+    return $self->_matrix->submatrix($test, $pversion, $limit);
 }
 
 sub reports_from_id ($self, $rid, $limit = 100) {

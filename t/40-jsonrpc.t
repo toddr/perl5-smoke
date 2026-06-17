@@ -78,6 +78,21 @@ my $api_only = $t->post_ok('/api',
     ->tx->res->json->{result};
 ok !(grep { $_ eq 'ping' } @$api_only), 'api filter excludes ping';
 
+# Oversized batch rejected
+subtest 'batch size cap' => sub {
+    my @oversized = map { { jsonrpc => '2.0', id => $_, method => 'ping' } } 1..101;
+    $t->post_ok('/api', json => \@oversized)
+      ->status_is(200)
+      ->json_is('/error/code' => -32600)
+      ->json_like('/error/message' => qr/Batch too large/);
+
+    my @ok_batch = map { { jsonrpc => '2.0', id => $_, method => 'ping' } } 1..100;
+    my $res = $t->post_ok('/api', json => \@ok_batch)
+      ->status_is(200)->tx->res->json;
+    is ref $res, 'ARRAY', 'batch of 100 accepted';
+    is scalar @$res, 100, 'all 100 responses returned';
+};
+
 # Internal errors must NOT leak implementation details (CVE-worthy info disclosure)
 subtest 'internal error hides exception details' => sub {
     # Temporarily register a method that dies with a recognizable internal message

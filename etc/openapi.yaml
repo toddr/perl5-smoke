@@ -150,6 +150,9 @@ paths:
         - in: query
           name: pversion
           schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
       responses:
         "200": { description: ok }
         "422": { description: missing test param }

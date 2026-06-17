@@ -91,4 +91,20 @@ $t->get_ok('/api/searchresults?reports_per_page=9999&page=-1')
   ->json_is('/reports_per_page' => 500, 'API search: rpp capped at 500')
   ->json_is('/page'             => 1,   'API search: page clamped to 1');
 
+# -- API submatrix -- limit parameter ---------------------------------
+
+$t->get_ok('/api/submatrix?test=nonexistent')
+  ->status_is(200);
+
+$t->get_ok('/api/submatrix?test=nonexistent&limit=9999')
+  ->status_is(200);
+
+$t->get_ok('/api/submatrix?test=nonexistent&limit=-5')
+  ->status_is(200);
+
+# -- Web submatrix -- limit parameter ----------------------------------
+
+$t->get_ok('/submatrix?test=nonexistent&limit=50')
+  ->status_is(200);
+
 done_testing;

@@ -21,7 +21,12 @@ sub _single ($c, $req) {
     return _reply($c, $req->{id}, $payload);
 }
 
+my $MAX_BATCH = 100;
+
 sub _batch ($c, $reqs) {
+    return _reply($c, undef, _err(-32600, "Batch too large (max $MAX_BATCH)."))
+        if @$reqs > $MAX_BATCH;
+
     my @out;
     for my $req (@$reqs) {
         my ($payload) = _single_payload($c, $req);

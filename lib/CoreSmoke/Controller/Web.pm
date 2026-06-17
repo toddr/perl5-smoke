@@ -149,13 +149,15 @@ sub matrix ($c) {
 sub submatrix ($c) {
     my $test     = $c->param('test');
     my $pversion = $c->param('pversion');
+    my $limit    = $c->param('limit') // 100;
     my $reports  = defined $test
-        ? $c->app->reports->submatrix($test, $pversion)
+        ? $c->app->reports->submatrix($test, $pversion, $limit)
         : [];
     return $c->render(template => 'web/submatrix',
         test     => $test,
         pversion => $pversion,
         reports  => $reports,
+        limit    => $limit,
     );
 }
 

@@ -213,4 +213,23 @@ my $sub_pv = $m->submatrix('op/magic.t', 'v5.40.0');
 is scalar @$sub_pv, 1, 'submatrix filtered by pversion returns 1';
 is $sub_pv->[0]{perl_id}, 'v5.40.0', 'filtered submatrix has correct perl_id';
 
+# =========================================================================
+# Test 5: submatrix limit parameter
+# =========================================================================
+
+my $sub_limit = $m->submatrix('op/magic.t', undef, 2);
+is scalar @$sub_limit, 2, 'submatrix limit=2 returns at most 2 rows';
+
+my $sub_limit1 = $m->submatrix('op/magic.t', undef, 1);
+is scalar @$sub_limit1, 1, 'submatrix limit=1 returns 1 row';
+
+my $sub_default = $m->submatrix('op/magic.t', undef);
+is scalar @$sub_default, 3, 'submatrix default limit (100) returns all 3 rows';
+
+my $sub_neg = $m->submatrix('op/magic.t', undef, -5);
+is scalar @$sub_neg, 1, 'negative limit clamped to 1';
+
+my $sub_zero = $m->submatrix('op/magic.t', undef, 0);
+is scalar @$sub_zero, 3, 'limit=0 treated as default (100)';
+
 done_testing;
