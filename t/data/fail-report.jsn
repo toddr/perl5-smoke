@@ -1,0 +1,149 @@
+{
+   "skip_tests" : "",
+   "summary" : "FAIL(F)",
+   "un_position" : "bottom",
+   "log_file" : "=== build log for perl 5.39.1 ===\ncc -DDEBUGGING -g -O0 -o miniperl\nAll tests successful.\nFailed 2 tests out of 2490.\n",
+   "is56x" : 0,
+   "harness3opts" : "",
+   "harness_only" : 0,
+   "v" : 1,
+   "outfile" : "mktest.out",
+   "out_file" : "Summary for perl 5.39.1\n\nFAIL(F)\n    op/magic.t\n    op/taint.t\n",
+   "un_file" : "",
+   "defaultenv" : 0,
+   "lfile" : "/home/smoker/perlsmoke/etc/blead.log",
+   "jsnfile" : "mktest.jsn",
+   "skipped_tests" : [],
+   "compiler_msgs" : [
+      "op/magic.c: In function 'Perl_mg_set':",
+      "op/magic.c:123:5: warning: unused variable 'sv' [-Wunused-variable]"
+   ],
+   "configs" : [
+      {
+         "duration" : 4200,
+         "arguments" : "",
+         "ccversion" : "gcc 12.2.0",
+         "cc" : "gcc",
+         "results" : [
+            {
+               "stat_cpu_time" : 950.12,
+               "failures" : [
+                  {
+                     "test" : "op/magic.t",
+                     "status" : "FAILED",
+                     "extra" : "Test 42 at op/magic.t line 318"
+                  }
+               ],
+               "summary" : "F",
+               "locale" : null,
+               "statistics" : "u=14.00  s=7.00  cu=820.00  cs=109.12  scripts=2490  tests=1174000",
+               "io_env" : "stdio",
+               "stat_tests" : "1174000"
+            },
+            {
+               "statistics" : "u=8.00  s=7.50  cu=650.00  cs=85.00  scripts=2490  tests=1175032",
+               "io_env" : "perlio",
+               "stat_tests" : "1175032",
+               "failures" : [
+                  {
+                     "test" : "op/magic.t",
+                     "status" : "FAILED",
+                     "extra" : "Test 42 at op/magic.t line 318"
+                  },
+                  {
+                     "test" : "op/taint.t",
+                     "status" : "FAILED",
+                     "extra" : ["Test 7 at op/taint.t line 89", "taint mode bypass"]
+                  }
+               ],
+               "stat_cpu_time" : 750.50,
+               "summary" : "F",
+               "locale" : null
+            },
+            {
+               "statistics" : "u=7.80  s=6.90  cu=640.00  cs=82.00  scripts=2490  tests=1175100",
+               "io_env" : "locale",
+               "stat_tests" : "1175100",
+               "stat_cpu_time" : 736.70,
+               "failures" : [],
+               "summary" : "O",
+               "locale" : "en_US.UTF-8"
+            }
+         ],
+         "started" : "2023-03-15 08:00:00 +0100",
+         "debugging" : "N"
+      },
+      {
+         "debugging" : "D",
+         "started" : "2023-03-15 09:10:00 +0100",
+         "results" : [
+            {
+               "failures" : [],
+               "stat_cpu_time" : 1020.00,
+               "locale" : null,
+               "summary" : "O",
+               "statistics" : "u=15.00  s=7.20  cu=890.00  cs=107.80  scripts=2490  tests=1175200",
+               "io_env" : "stdio",
+               "stat_tests" : "1175200"
+            },
+            {
+               "statistics" : "u=9.00  s=7.10  cu=710.00  cs=88.00  scripts=2490  tests=1175150",
+               "io_env" : "perlio",
+               "stat_tests" : "1175150",
+               "stat_cpu_time" : 814.10,
+               "failures" : [],
+               "summary" : "O",
+               "locale" : null
+            },
+            {
+               "locale" : "en_US.UTF-8",
+               "summary" : "O",
+               "stat_cpu_time" : 820.30,
+               "failures" : [],
+               "stat_tests" : "1175050",
+               "io_env" : "locale",
+               "statistics" : "u=9.10  s=7.00  cu=720.00  cs=84.20  scripts=2490  tests=1175050"
+            }
+         ],
+         "cc" : "gcc",
+         "arguments" : "-DDEBUGGING",
+         "ccversion" : "gcc 12.2.0",
+         "duration" : 4500
+      }
+   ],
+   "nonfatal_msgs" : [],
+   "hostname" : "smokebox",
+   "cfg" : "/home/smoker/perlsmoke/etc/blead.buildcfg",
+   "ddir" : "/home/smoker/perlsmoke/perl-current",
+   "locale" : "en_US.UTF-8",
+   "manifest_msgs" : [],
+   "showcfg" : 0,
+   "sysinfo" : {
+      "hostname" : "smokebox",
+      "smoke_version" : "1.80",
+      "git_id" : "abc123def456789012345678901234567890abcd",
+      "cpu_description" : "Intel Xeon E-2288G",
+      "lang" : null,
+      "duration" : 8700,
+      "smoker_version" : "0.050",
+      "smoke_branch" : "blead",
+      "architecture" : "x86_64",
+      "reporter" : "",
+      "username" : "smokebot",
+      "osname" : "linux",
+      "smoke_revision" : "1.80",
+      "reporter_version" : "0.054",
+      "git_describe" : "v5.39.1-42-gabc123def4",
+      "perl_id" : "5.39.1",
+      "test_jobs" : 8,
+      "cpu_count" : "16",
+      "user_note" : "",
+      "osversion" : "6.1.0-15-amd64 (Debian 12.4)",
+      "lc_all" : null,
+      "smoke_perl" : "5.36.0",
+      "config_count" : 2,
+      "smoke_date" : "2023-03-15 08:00:00 +0100"
+   },
+   "applied_patches" : [],
+   "rptfile" : "mktest.rpt"
+}
