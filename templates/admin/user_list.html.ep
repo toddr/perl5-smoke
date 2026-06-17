@@ -34,7 +34,7 @@
     </td>
     <td>
 %     if ($u->{username} ne $current_user) {
-      <form method="POST" action="/admin/users/<%= $u->{id} %>/delete" style="display:inline">
+      <form method="POST" action="/admin/users/<%= $u->{id} %>/delete" class="inline-form">
         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete user <%= $u->{username} %>?')">Delete</button>
       </form>
 %     }

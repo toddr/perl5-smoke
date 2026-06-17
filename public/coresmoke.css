@@ -760,6 +760,9 @@ p { margin: 0 0 var(--space-4); }
 }
 
 .form-field { display: block; margin: 0; }
+.form-stack { display: flex; flex-direction: column; gap: var(--space-4); }
+.inline-form { display: inline; }
+.login-card { max-width: 28rem; margin: var(--space-8) auto; }
 .search-form {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);

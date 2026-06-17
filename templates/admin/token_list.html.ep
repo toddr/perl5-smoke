@@ -34,7 +34,7 @@
     </td>
     <td>
 %     unless ($cancelled) {
-      <form method="POST" action="/admin/tokens/<%= $tok->{id} %>/cancel" style="display:inline">
+      <form method="POST" action="/admin/tokens/<%= $tok->{id} %>/cancel" class="inline-form">
         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel this token?')">Cancel</button>
       </form>
 %     }

@@ -1,7 +1,7 @@
 % layout 'default';
 % title 'Admin Login';
 
-<div class="card" style="max-width: 28rem; margin: 4rem auto;">
+<div class="card login-card">
   <h2>Admin Login</h2>
 
 % if (my $error = stash 'error') {
