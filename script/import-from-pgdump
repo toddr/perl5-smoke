@@ -370,7 +370,7 @@ sub build_insert_sth ($dbh, $target) {
         // die "no column list defined for target table $target";
     my $placeholders = join ', ', ('?') x scalar @$cols;
     my $colnames     = join ', ', @$cols;
-    my $sql = "INSERT INTO $target ($colnames) VALUES ($placeholders)";
+    my $sql = "INSERT OR IGNORE INTO $target ($colnames) VALUES ($placeholders)";
     return ($dbh->prepare($sql), $sql);
 }
 

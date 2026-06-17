@@ -100,7 +100,7 @@ my @files;
 File::Find::find(sub { push @files, $File::Find::name if -f $_ }, $tmp);
 say sprintf "[walk] %d files in tarball", scalar @files;
 
-my ($written, $skipped_no_match, $skipped_no_hash, $errors) = (0, 0, 0, 0);
+my ($written, $skipped_no_match, $skipped_no_hash, $skipped_exists, $errors) = (0, 0, 0, 0, 0);
 my $next_progress = 500;
 
 for my $file (@files) {
@@ -128,6 +128,11 @@ for my $file (@files) {
     make_path($dir) unless -d $dir;
     my $dest = "$dir/$field.xz";
 
+    if (-f $dest) {
+        $skipped_exists++;
+        next;
+    }
+
     if (open my $in, '<:raw', $file) {
         my $bytes = do { local $/; <$in> };
         close $in;
@@ -154,14 +159,14 @@ for my $file (@files) {
         $errors++;
     }
 
-    if ($written + $skipped_no_match + $skipped_no_hash + $errors >= $next_progress) {
-        say sprintf "  ... %d processed (%d written, %d no-match, %d no-hash, %d errors)",
-            $next_progress, $written, $skipped_no_match, $skipped_no_hash, $errors;
+    if ($written + $skipped_no_match + $skipped_no_hash + $skipped_exists + $errors >= $next_progress) {
+        say sprintf "  ... %d processed (%d written, %d exists, %d no-match, %d no-hash, %d errors)",
+            $next_progress, $written, $skipped_exists, $skipped_no_match, $skipped_no_hash, $errors;
         $next_progress += 500;
     }
 }
 
 say "";
-say sprintf "[done] wrote=%d  no-rid-pattern=%d  no-db-row=%d  errors=%d",
-    $written, $skipped_no_match, $skipped_no_hash, $errors;
+say sprintf "[done] wrote=%d  exists=%d  no-rid-pattern=%d  no-db-row=%d  errors=%d",
+    $written, $skipped_exists, $skipped_no_match, $skipped_no_hash, $errors;
 say "    target: $reports_root";
