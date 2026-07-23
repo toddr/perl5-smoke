@@ -6,7 +6,7 @@ use FindBin;
 
 my $root = "$FindBin::Bin/..";
 
-for my $script (qw(smoke migrate fix-plevels)) {
+for my $script (qw(smoke migrate fix-plevels create-admin import-from-pgdump import-report-files-tarball install-deps)) {
     my $path = "$root/script/$script";
     ok -f $path, "script/$script exists";
     my $out = `"$^X" -c "$path" 2>&1`;
