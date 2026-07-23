@@ -54,6 +54,7 @@ sub _list_methods ($c, $params) {
             $c->app->reports->latest({
                 page             => $p->{page},
                 reports_per_page => $p->{reports_per_page},
+                selected_summary => $p->{selected_summary},
             });
         },
     },
@@ -85,7 +86,7 @@ sub _list_methods ($c, $params) {
                 // { error => 'Out file not found.' };
         },
     },
-    matrix    => { plugin => 'api', call => sub ($c, $p) { $c->app->reports->matrix } },
+    matrix    => { plugin => 'api', call => sub ($c, $p) { $c->app->reports->matrix(include_stdio => ($p->{include_stdio} ? 1 : 0)) } },
     submatrix => {
         plugin => 'api',
         call   => sub ($c, $p) { $c->app->reports->submatrix($p->{test}, $p->{pversion}) },

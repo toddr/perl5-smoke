@@ -84,6 +84,10 @@ paths:
         - in: query
           name: reports_per_page
           schema: { type: integer, default: 25 }
+        - in: query
+          name: selected_summary
+          schema: { type: string, enum: [all, pass, fail] }
+          description: Filter by summary bucket (pass or fail)
       responses: { "200": { description: ok } }
 
   /api/full_report_data/{rid}:
@@ -137,6 +141,11 @@ paths:
   /api/matrix:
     get:
       summary: Failure matrix across the last 5 perl versions
+      parameters:
+        - in: query
+          name: include_stdio
+          schema: { type: integer, enum: [0, 1], default: 0 }
+          description: Include stdio io_env failures (excluded by default)
       responses: { "200": { description: ok } }
 
   /api/submatrix:

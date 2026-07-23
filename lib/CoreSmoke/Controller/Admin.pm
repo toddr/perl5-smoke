@@ -15,9 +15,9 @@ sub login_page ($c) {
 }
 
 sub login ($c) {
-    my $token = $c->csrf_token;
-    my $submitted = $c->param('csrf_token') // '';
-    unless ($submitted eq $token) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
         return $c->render(template => 'admin/login', error => 'Invalid form submission.');
     }
 
@@ -70,8 +70,9 @@ sub token_new ($c) {
 }
 
 sub token_create ($c) {
-    my $csrf = $c->csrf_token;
-    unless (($c->param('csrf_token') // '') eq $csrf) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
         return $c->render(template => 'admin/token_new', error => 'Invalid form submission.');
     }
 
@@ -106,8 +107,9 @@ sub user_new ($c) {
 }
 
 sub user_create ($c) {
-    my $csrf = $c->csrf_token;
-    unless (($c->param('csrf_token') // '') eq $csrf) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
         return $c->render(template => 'admin/user_new', error => 'Invalid form submission.');
     }
 

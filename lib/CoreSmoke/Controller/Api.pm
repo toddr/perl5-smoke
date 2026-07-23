@@ -16,6 +16,7 @@ sub latest ($c) {
     return $c->render(json => $c->app->reports->latest({
         page             => $c->param('page'),
         reports_per_page => $c->param('reports_per_page'),
+        selected_summary => $c->param('selected_summary'),
     }));
 }
 
@@ -44,7 +45,8 @@ sub outfile ($c) {
 }
 
 sub matrix ($c) {
-    return $c->render(json => $c->app->reports->matrix);
+    my $include_stdio = $c->param('include_stdio') ? 1 : 0;
+    return $c->render(json => $c->app->reports->matrix(include_stdio => $include_stdio));
 }
 
 sub submatrix ($c) {
