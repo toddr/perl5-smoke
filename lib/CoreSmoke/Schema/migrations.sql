@@ -166,3 +166,17 @@ ALTER TABLE report DROP COLUMN api_token_id;
 DROP INDEX IF EXISTS api_token_email_idx;
 DROP TABLE IF EXISTS api_token;
 DROP TABLE IF EXISTS admin_user;
+
+-- 6 up
+
+CREATE INDEX report_smoke_version_idx ON report(smoke_version);
+CREATE INDEX report_summary_idx       ON report(summary);
+CREATE INDEX config_cc_idx            ON config(cc);
+CREATE INDEX config_ccversion_idx     ON config(ccversion);
+
+-- 6 down
+
+DROP INDEX IF EXISTS config_ccversion_idx;
+DROP INDEX IF EXISTS config_cc_idx;
+DROP INDEX IF EXISTS report_summary_idx;
+DROP INDEX IF EXISTS report_smoke_version_idx;

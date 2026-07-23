@@ -65,15 +65,19 @@ sub update_password ($self, $username, $new_password) {
 }
 
 sub delete_user ($self, $username) {
-    my $count = $self->{sqlite}->db->query(
-        "SELECT COUNT(*) AS cnt FROM admin_user"
-    )->hash->{cnt};
-    return { error => 'Cannot delete the last admin user.' } if $count <= 1;
-
-    my $result = $self->{sqlite}->db->query(
-        "DELETE FROM admin_user WHERE username = ?", $username,
+    my $db = $self->{sqlite}->db;
+    my $result = $db->query(
+        "DELETE FROM admin_user WHERE username = ? AND (SELECT COUNT(*) FROM admin_user) > 1",
+        $username,
     );
-    return $result->rows > 0 ? { ok => 1 } : { error => 'User not found.' };
+    return { ok => 1 } if $result->rows > 0;
+
+    my $exists = $db->query(
+        "SELECT 1 FROM admin_user WHERE username = ?", $username,
+    )->hash;
+    return $exists
+        ? { error => 'Cannot delete the last admin user.' }
+        : { error => 'User not found.' };
 }
 
 # --- API tokens ---
