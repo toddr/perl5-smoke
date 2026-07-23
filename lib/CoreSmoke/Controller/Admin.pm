@@ -4,6 +4,14 @@ use warnings;
 use experimental qw(signatures);
 use Mojo::Base 'Mojolicious::Controller', -signatures;
 
+sub _csrf_valid ($c, $error_template) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    return 1 unless $v->has_error('csrf_token');
+    $c->render(template => $error_template, error => 'Invalid form submission.');
+    return;
+}
+
 sub check_session ($c) {
     return 1 if $c->session('admin_user');
     $c->redirect_to('/admin/login');
@@ -15,11 +23,7 @@ sub login_page ($c) {
 }
 
 sub login ($c) {
-    my $token = $c->csrf_token;
-    my $submitted = $c->param('csrf_token') // '';
-    unless ($submitted eq $token) {
-        return $c->render(template => 'admin/login', error => 'Invalid form submission.');
-    }
+    return unless _csrf_valid($c, 'admin/login');
 
     my $username = $c->param('username') // '';
     my $password = $c->param('password') // '';
@@ -70,10 +74,7 @@ sub token_new ($c) {
 }
 
 sub token_create ($c) {
-    my $csrf = $c->csrf_token;
-    unless (($c->param('csrf_token') // '') eq $csrf) {
-        return $c->render(template => 'admin/token_new', error => 'Invalid form submission.');
-    }
+    return unless _csrf_valid($c, 'admin/token_new');
 
     my $note  = $c->param('note')  // '';
     my $email = $c->param('email') // '';
@@ -106,10 +107,7 @@ sub user_new ($c) {
 }
 
 sub user_create ($c) {
-    my $csrf = $c->csrf_token;
-    unless (($c->param('csrf_token') // '') eq $csrf) {
-        return $c->render(template => 'admin/user_new', error => 'Invalid form submission.');
-    }
+    return unless _csrf_valid($c, 'admin/user_new');
 
     my $username = $c->param('username') // '';
     my $password = $c->param('password') // '';
@@ -134,9 +132,7 @@ sub user_update_password ($c) {
         return $c->redirect_to('/admin/users');
     }
 
-    my $user = $c->app->sqlite->db->query(
-        "SELECT username FROM admin_user WHERE id = ?", $id,
-    )->hash;
+    my $user = $c->app->auth->get_user_by_id($id);
     if ($user) {
         $c->app->auth->update_password($user->{username}, $password);
     }
@@ -146,9 +142,7 @@ sub user_update_password ($c) {
 sub user_delete ($c) {
     my $id = $c->stash('id');
 
-    my $user = $c->app->sqlite->db->query(
-        "SELECT username FROM admin_user WHERE id = ?", $id,
-    )->hash;
+    my $user = $c->app->auth->get_user_by_id($id);
 
     if ($user) {
         if ($user->{username} eq $c->session('admin_user')) {

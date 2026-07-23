@@ -54,6 +54,12 @@ sub list_users ($self) {
     )->hashes->to_array;
 }
 
+sub get_user_by_id ($self, $id) {
+    return $self->{sqlite}->db->query(
+        "SELECT id, username, created_at, updated_at FROM admin_user WHERE id = ?", $id,
+    )->hash;
+}
+
 sub update_password ($self, $username, $new_password) {
     die "password required" unless defined $new_password && length $new_password;
     my $hash = $self->_hash_password($new_password);
