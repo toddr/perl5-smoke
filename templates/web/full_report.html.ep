@@ -55,6 +55,7 @@
 %   } else {
     %= badge 'Unauthenticated', ''
 %   }
+  </dd>
 %   if ($report->{user_note}) {
   <dt>Note</dt>       <dd>
     %= include 'components/alert', variant => 'warning', body => $report->{user_note}

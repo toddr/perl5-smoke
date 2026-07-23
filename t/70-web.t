@@ -38,6 +38,29 @@ $t->get_ok("/report/$rid")->status_is(200)
   ->text_like('h1' => qr/Smoke report #\Q$rid\E/)
   ->content_like(qr/v5\.37/, 'full_report shows git_describe value');
 
+# Trust badge appears, Note section absent (no user_note in fixture)
+$t->get_ok("/report/$rid")->status_is(200)
+  ->content_like(qr/<dt>Trust<\/dt>/)
+  ->content_like(qr/Unauthenticated/)
+  ->content_unlike(qr/<dt>Note<\/dt>/, 'no Note row when user_note is empty');
+
+# Inject a user_note to exercise the Note rendering path and verify
+# the Trust <dd> is properly closed before the Note <dt> opens.
+$h->app->sqlite->db->query(
+    "UPDATE report SET user_note = 'test note here' WHERE id = ?", $rid
+);
+$t->get_ok("/report/$rid")->status_is(200)
+  ->content_like(qr/<dt>Note<\/dt>/, 'Note row appears with user_note')
+  ->content_like(qr/test note here/);
+# Verify Trust <dd> closes before Note <dt> (no nesting)
+my $html = $t->tx->res->body;
+if ($html =~ m{<dt>Trust</dt>\s*<dd>(.*?)</dd>}s) {
+    unlike $1, qr/<dt>Note/, 'Note section is not nested inside Trust <dd>';
+}
+$h->app->sqlite->db->query(
+    "UPDATE report SET user_note = NULL WHERE id = ?", $rid
+);
+
 # manifest_msgs is on disk; the file route reads it back through xz
 # (we ingested an empty log_file so log_file path stays 404)
 $t->get_ok("/file/log_file/$rid")->status_is(404);
