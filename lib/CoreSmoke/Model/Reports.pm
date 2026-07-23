@@ -81,8 +81,26 @@ sub latest ($self, $params = {}) {
          LIMIT ? OFFSET ?
         SQL
 
-    my $total = @$rows ? delete $rows->[0]{_total_count} : 0;
-    delete $_->{_total_count} for @$rows;
+    my $total;
+    if (@$rows) {
+        $total = delete $rows->[0]{_total_count};
+        delete $_->{_total_count} for @$rows;
+    }
+    else {
+        $total = $db->query(<<~"SQL", @extra_bind)->hash->{n} // 0;
+            SELECT COUNT(*) AS n
+              FROM report r
+             INNER JOIN (
+                   SELECT hostname, MAX(plevel) AS plevel
+                     FROM report
+                    GROUP BY hostname
+                   ) g USING (hostname, plevel)
+             WHERE r.smoke_date = (
+                   SELECT MAX(smoke_date) FROM report
+                    WHERE hostname = r.hostname AND plevel = r.plevel
+                   )$extra_where
+            SQL
+    }
 
     my $latest_plevel = $db->query("SELECT MAX(plevel) AS p FROM report")->hash->{p};
 

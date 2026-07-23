@@ -105,4 +105,82 @@ is $page1->{report_count}, 3, 'total count unaffected by pagination';
 my $page2 = $h->app->reports->latest({ reports_per_page => 2, page => 2 });
 is scalar @{ $page2->{reports} }, 1, 'page 2 has remaining 1 report';
 
+# --- Page beyond last page: count must still reflect the true total --------
+{
+    my $beyond = $h->app->reports->latest({ reports_per_page => 2, page => 99 });
+    is scalar @{ $beyond->{reports} }, 0, 'page 99 returns no reports';
+    is $beyond->{report_count}, 3,
+        'report_count is correct even when page exceeds result set';
+}
+
+# --- latest_plevel: should be the highest plevel in the whole DB -----------
+{
+    is $data->{latest_plevel}, '5.042001zzz000',
+        'latest_plevel is the highest plevel across all reports';
+}
+
+# --- Summary filter: PASS / FAIL ------------------------------------------
+
+# Add a FAIL report for a new host so we have both PASS and FAIL
+insert_report(
+    hostname    => 'delta',
+    plevel      => '5.041009zzz000',
+    smoke_date  => '2024-08-01T10:00:00Z',
+    summary     => 'FAIL(F)',
+    report_hash => 'ddd111',
+    git_id      => 'ddd1',
+);
+
+{
+    my $all = $h->app->reports->latest({ selected_summary => 'all' });
+    is $all->{report_count}, 4, 'selected_summary=all returns all hosts';
+}
+
+{
+    my $pass = $h->app->reports->latest({ selected_summary => 'pass' });
+    is $pass->{report_count}, 3, 'selected_summary=pass returns only PASS hosts';
+    ok( !(grep { $_->{summary} =~ /^FAIL/ } @{ $pass->{reports} }),
+        'no FAIL reports in pass filter' );
+}
+
+{
+    my $fail = $h->app->reports->latest({ selected_summary => 'fail' });
+    is $fail->{report_count}, 1, 'selected_summary=fail returns only FAIL hosts';
+    is $fail->{reports}[0]{hostname}, 'delta', 'FAIL host is delta';
+}
+
+{
+    my $unknown = $h->app->reports->latest({ selected_summary => 'bogus' });
+    is $unknown->{report_count}, 4,
+        'unknown summary value treated as all (no filter)';
+}
+
+# Summary filter is case-insensitive
+{
+    my $upper = $h->app->reports->latest({ selected_summary => 'PASS' });
+    is $upper->{report_count}, 3, 'PASS (uppercase) works as pass filter';
+}
+
+# --- Summary filter + pagination beyond: fallback count must apply filter ---
+{
+    my $fail_beyond = $h->app->reports->latest({
+        selected_summary => 'fail',
+        reports_per_page => 25,
+        page             => 99,
+    });
+    is scalar @{ $fail_beyond->{reports} }, 0,
+        'fail filter + beyond-page returns no reports';
+    is $fail_beyond->{report_count}, 1,
+        'fail filter + beyond-page still counts 1 FAIL host';
+}
+
+# --- Empty DB: no reports at all -------------------------------------------
+{
+    $db->query('DELETE FROM report');
+    my $empty = $h->app->reports->latest;
+    is $empty->{report_count}, 0, 'empty DB returns count 0';
+    is scalar @{ $empty->{reports} }, 0, 'empty DB returns no reports';
+    is $empty->{latest_plevel}, '', 'empty DB has empty latest_plevel';
+}
+
 done_testing;
