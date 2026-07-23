@@ -7,6 +7,7 @@ use Mojo::Base 'Mojolicious::Controller', -signatures;
 use Mojo::File qw(path);
 use Mojo::JSON qw(encode_json);
 use CoreSmoke::Model::Search qw(search_params);
+use CoreSmoke::Validate qw(positive_int non_negative_int clamp_int);
 
 sub version ($c) {
     return $c->render(json => $c->app->reports->version);
@@ -14,31 +15,42 @@ sub version ($c) {
 
 sub latest ($c) {
     return $c->render(json => $c->app->reports->latest({
-        page             => $c->param('page'),
-        reports_per_page => $c->param('reports_per_page'),
+        page             => clamp_int($c->param('page'), 1, 1_000_000, 1),
+        reports_per_page => clamp_int($c->param('reports_per_page'), 1, 500, 25),
     }));
 }
 
+sub _require_rid ($c) {
+    my $rid = positive_int($c->stash('rid'));
+    return $rid if $rid;
+    $c->render(status => 400, json => { error => 'rid must be a positive integer.' });
+    return;
+}
+
 sub full_report_data ($c) {
-    my $data = $c->app->reports->full_report_data($c->stash('rid'))
+    my $rid = _require_rid($c) // return;
+    my $data = $c->app->reports->full_report_data($rid)
         // return $c->render(status => 404, json => { error => 'Report not found.' });
     return $c->render(json => $data);
 }
 
 sub report_data ($c) {
-    my $data = $c->app->reports->report_data($c->stash('rid'))
+    my $rid = _require_rid($c) // return;
+    my $data = $c->app->reports->report_data($rid)
         // return $c->render(status => 404, json => { error => 'Report not found.' });
     return $c->render(json => $data);
 }
 
 sub logfile ($c) {
-    my $data = $c->app->reports->logfile($c->stash('rid'))
+    my $rid = _require_rid($c) // return;
+    my $data = $c->app->reports->logfile($rid)
         // return $c->render(status => 404, json => { error => 'Log file not found.' });
     return $c->render(json => $data);
 }
 
 sub outfile ($c) {
-    my $data = $c->app->reports->outfile($c->stash('rid'))
+    my $rid = _require_rid($c) // return;
+    my $data = $c->app->reports->outfile($rid)
         // return $c->render(status => 404, json => { error => 'Out file not found.' });
     return $c->render(json => $data);
 }
@@ -67,13 +79,16 @@ sub searchresults ($c) {
 }
 
 sub reports_from_id ($c) {
-    return $c->render(json => $c->app->reports->reports_from_id(
-        $c->stash('rid'), $c->param('limit') // 100,
-    ));
+    my $rid = _require_rid($c) // return;
+    my $limit = clamp_int($c->param('limit'), 1, 500, 100);
+    return $c->render(json => $c->app->reports->reports_from_id($rid, $limit));
 }
 
 sub reports_from_epoch ($c) {
-    return $c->render(json => $c->app->reports->reports_from_epoch($c->stash('epoch')));
+    my $epoch = non_negative_int($c->stash('epoch'));
+    return $c->render(status => 400, json => { error => 'epoch must be a non-negative integer.' })
+        unless defined $epoch;
+    return $c->render(json => $c->app->reports->reports_from_epoch($epoch));
 }
 
 # OpenAPI spec served from etc/openapi.yaml. The yaml file is the source of

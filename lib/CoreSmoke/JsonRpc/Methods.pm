@@ -11,6 +11,7 @@ use experimental qw(signatures);
 # `$c` is the Mojolicious::Controller (so the call has access to helpers).
 
 use Sys::Hostname qw(hostname);
+use CoreSmoke::Validate qw(positive_int non_negative_int clamp_int);
 
 our %METHODS;       # forward-declared; populated below
 my $STARTED = time;
@@ -52,36 +53,44 @@ sub _list_methods ($c, $params) {
         plugin => 'api',
         call   => sub ($c, $p) {
             $c->app->reports->latest({
-                page             => $p->{page},
-                reports_per_page => $p->{reports_per_page},
+                page             => clamp_int($p->{page}, 1, 1_000_000, 1),
+                reports_per_page => clamp_int($p->{reports_per_page}, 1, 500, 25),
             });
         },
     },
     full_report_data => {
         plugin => 'api',
         call   => sub ($c, $p) {
-            $c->app->reports->full_report_data($p->{rid})
+            my $rid = positive_int($p->{rid})
+                // die { code => -32602, message => 'rid must be a positive integer' };
+            $c->app->reports->full_report_data($rid)
                 // { error => 'Report not found.' };
         },
     },
     report_data => {
         plugin => 'api',
         call   => sub ($c, $p) {
-            $c->app->reports->report_data($p->{rid})
+            my $rid = positive_int($p->{rid})
+                // die { code => -32602, message => 'rid must be a positive integer' };
+            $c->app->reports->report_data($rid)
                 // { error => 'Report not found.' };
         },
     },
     logfile => {
         plugin => 'api',
         call   => sub ($c, $p) {
-            $c->app->reports->logfile($p->{rid})
+            my $rid = positive_int($p->{rid})
+                // die { code => -32602, message => 'rid must be a positive integer' };
+            $c->app->reports->logfile($rid)
                 // { error => 'Log file not found.' };
         },
     },
     outfile => {
         plugin => 'api',
         call   => sub ($c, $p) {
-            $c->app->reports->outfile($p->{rid})
+            my $rid = positive_int($p->{rid})
+                // die { code => -32602, message => 'rid must be a positive integer' };
+            $c->app->reports->outfile($rid)
                 // { error => 'Out file not found.' };
         },
     },
@@ -114,12 +123,19 @@ sub _list_methods ($c, $params) {
     reports_from_id => {
         plugin => 'api',
         call   => sub ($c, $p) {
-            $c->app->reports->reports_from_id($p->{rid}, $p->{limit} // 100);
+            my $rid = positive_int($p->{rid})
+                // die { code => -32602, message => 'rid must be a positive integer' };
+            my $limit = clamp_int($p->{limit}, 1, 500, 100);
+            $c->app->reports->reports_from_id($rid, $limit);
         },
     },
     reports_from_date => {
         plugin => 'api',
-        call   => sub ($c, $p) { $c->app->reports->reports_from_epoch($p->{epoch}) },
+        call   => sub ($c, $p) {
+            my $epoch = non_negative_int($p->{epoch})
+                // die { code => -32602, message => 'epoch must be a non-negative integer' };
+            $c->app->reports->reports_from_epoch($epoch);
+        },
     },
     'api.version' => {
         plugin => 'api',
