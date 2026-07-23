@@ -50,13 +50,16 @@ sub post_report ($self, $raw, %opts) {
     # Write on-disk content first (decision #33: best-effort, files first).
     $self->{report_files}->write($data->{report_hash}, $files) if %$files;
 
-    # Validate API token if provided.
+    # Validate API token if provided. Usage is recorded AFTER the
+    # transaction commits so duplicate-report rejections don't inflate
+    # the counter.
     my $api_token_string = $opts{api_token};
+    my $validated_token_id;
     if (defined $api_token_string && $self->{auth}) {
         my $token_row = $self->{auth}->validate_token($api_token_string);
         if ($token_row) {
             $data->{api_token_id} = $token_row->{id};
-            $self->{auth}->record_token_use($token_row->{id});
+            $validated_token_id   = $token_row->{id};
         }
     }
 
@@ -80,11 +83,15 @@ sub post_report ($self, $raw, %opts) {
     };
     if (my $e = $@) {
         if ("$e" =~ /UNIQUE constraint failed/i) {
-            return { error => 'Report already posted.', db_error => "$e" };
+            return { error => 'Report already posted.' };
         }
         die $e;
     }
     $tx->commit;
+
+    $self->{auth}->record_token_use($validated_token_id)
+        if $validated_token_id && $self->{auth};
+
     return { id => $rid };
 }
 
