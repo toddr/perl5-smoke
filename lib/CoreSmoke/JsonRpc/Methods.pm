@@ -101,13 +101,9 @@ sub _list_methods ($c, $params) {
     post_report => {
         plugin => 'api',
         call   => sub ($c, $p) {
-            my $token_string = do {
-                my $auth = $c->req->headers->authorization // '';
-                $auth =~ /^Bearer\s+(\S+)$/i ? $1 : undef;
-            };
             $c->app->ingest->post_report(
                 $p->{report_data},
-                api_token => $token_string,
+                api_token => scalar $c->bearer_token,
             );
         },
     },

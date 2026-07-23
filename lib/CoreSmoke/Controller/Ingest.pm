@@ -21,8 +21,7 @@ sub post_report ($c) {
     my ($data, $err, $status) = _extract_report_data($c);
     return $c->render(status => $status, json => { error => $err }) if $err;
 
-    my $token_string = _extract_bearer_token($c);
-    my $result = $c->app->ingest->post_report($data, api_token => $token_string);
+    my $result = $c->app->ingest->post_report($data, api_token => scalar $c->bearer_token);
     return $c->render(status => 409, json => $result) if $result->{error};
     return $c->render(json => $result);
 }
@@ -47,12 +46,6 @@ sub _extract_report_data ($c) {
     my $data = $payload->{report_data}
         // return (undef, 'Missing report_data.', 422);
     return ($data, undef, undef);
-}
-
-sub _extract_bearer_token ($c) {
-    my $auth = $c->req->headers->authorization // return;
-    return $1 if $auth =~ /^Bearer\s+(\S+)$/i;
-    return;
 }
 
 1;

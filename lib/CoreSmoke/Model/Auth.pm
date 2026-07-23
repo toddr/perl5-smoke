@@ -91,14 +91,15 @@ sub create_token ($self, %args) {
         );
     };
     if (my $e = $@) {
-        if ("$e" =~ /UNIQUE constraint failed/i) {
-            $token = unpack('H*', urandom(32));
+        die $e unless "$e" =~ /UNIQUE constraint failed/i;
+        $token = unpack('H*', urandom(32));
+        eval {
             $self->{sqlite}->db->query(
                 "INSERT INTO api_token (token, note, email) VALUES (?, ?, ?)",
                 $token, $note, $email,
             );
-        }
-        else { die $e }
+        };
+        die $@ if $@;
     }
 
     my $row = $self->{sqlite}->db->query(

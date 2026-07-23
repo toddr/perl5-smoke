@@ -77,6 +77,12 @@ sub startup ($self) {
     $self->helper(ingest       => sub ($c) { $ingest });
     $self->helper(auth         => sub ($c) { $auth });
 
+    $self->helper(bearer_token => sub ($c) {
+        my $auth_header = $c->req->headers->authorization // return;
+        return $1 if $auth_header =~ /^Bearer\s+(\S+)$/i;
+        return;
+    });
+
     # Mojolicious doesn't expose Mojo::Util::url_escape as a default
     # helper, but our templates use it for query-string assembly.
     require Mojo::Util;

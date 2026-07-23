@@ -5,7 +5,6 @@ use experimental qw(signatures);
 use Mojo::Base 'Mojolicious::Controller', -signatures;
 
 use Mojo::File qw(path);
-use Mojo::JSON qw(encode_json);
 use CoreSmoke::Model::Search qw(search_params);
 
 sub version ($c) {

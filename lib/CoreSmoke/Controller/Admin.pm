@@ -15,9 +15,9 @@ sub login_page ($c) {
 }
 
 sub login ($c) {
-    my $token = $c->csrf_token;
-    my $submitted = $c->param('csrf_token') // '';
-    unless ($submitted eq $token) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
         return $c->render(template => 'admin/login', error => 'Invalid form submission.');
     }
 
@@ -70,8 +70,9 @@ sub token_new ($c) {
 }
 
 sub token_create ($c) {
-    my $csrf = $c->csrf_token;
-    unless (($c->param('csrf_token') // '') eq $csrf) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
         return $c->render(template => 'admin/token_new', error => 'Invalid form submission.');
     }
 
@@ -89,8 +90,9 @@ sub token_show ($c) {
 }
 
 sub token_cancel ($c) {
-    my $id = $c->stash('id');
-    $c->app->auth->cancel_token($id);
+    my $id  = $c->stash('id');
+    my $res = $c->app->auth->cancel_token($id);
+    $c->flash(error => $res->{error}) if $res->{error};
     $c->redirect_to('/admin/tokens');
 }
 
@@ -106,8 +108,9 @@ sub user_new ($c) {
 }
 
 sub user_create ($c) {
-    my $csrf = $c->csrf_token;
-    unless (($c->param('csrf_token') // '') eq $csrf) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
         return $c->render(template => 'admin/user_new', error => 'Invalid form submission.');
     }
 
@@ -138,7 +141,8 @@ sub user_update_password ($c) {
         "SELECT username FROM admin_user WHERE id = ?", $id,
     )->hash;
     if ($user) {
-        $c->app->auth->update_password($user->{username}, $password);
+        my $res = $c->app->auth->update_password($user->{username}, $password);
+        $c->flash(error => $res->{error}) if $res->{error};
     }
     $c->redirect_to('/admin/users');
 }

@@ -175,7 +175,10 @@ App.pm registers a few helpers that aren't in `Mojolicious::Plugin::DefaultHelpe
   assembly.
 - `selected_if($cond)` — returns `'selected'` or `''` for
   `<option>`/`<input>` markup.
-- `sqlite`, `report_files`, `reports`, `ingest` — DAO accessors.
+- `sqlite`, `report_files`, `reports`, `ingest`, `auth` — DAO accessors.
+- `bearer_token` — extracts Bearer token from Authorization header.
+  Returns the token string or undef. Used by Ingest and JSONRPC
+  post_report handlers.
 - `duration_hms($seconds)` — formats a duration like `1h 5m 12s`.
 - `badge($text, $variant)` / `status_pill($summary)` /
   `nav_link($label, $href)` / `btn_link($label, $href, $variant?, $size?)`
