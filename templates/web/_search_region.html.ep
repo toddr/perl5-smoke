@@ -78,7 +78,7 @@
       %= include 'components/form_field', label => 'Architecture',     name => 'selected_arch',    type => 'select', options => $arch_options,    extra => $pinned->($sel_arch,    \%arch_have)
       %= include 'components/form_field', label => 'OS name',          name => 'selected_osnm',    type => 'select', options => $osnm_options,    extra => $pinned->($sel_osnm,    \%osnm_have)
       %= include 'components/form_field', label => 'OS version',       name => 'selected_osvs',    type => 'select', options => $osvs_options,    extra => $pinned->($sel_osvs,    \%osvs_have)
-      %= include 'components/form_field', label => 'Perl version',     name => 'selected_perl',    type => 'select', options => $perl_options,    extra => $pinned->($sel_perl,    \%perl_have)
+      %= include 'components/form_field', label => 'Perl version',     name => 'selected_perl',    type => 'select', options => $perl_options,    extra => $pinned->($sel_perl,    { %perl_have, latest => 1 })
       %= include 'components/form_field', label => 'Branch',           name => 'selected_branch',  type => 'select', options => $branch_options,  extra => $pinned->($sel_branch,  \%branch_have)
       %= include 'components/form_field', label => 'Hostname',         name => 'selected_host',    type => 'select', options => $host_options,    extra => $pinned->($sel_host,    \%host_have)
       %= include 'components/form_field', label => 'Compiler',         name => 'selected_comp',    type => 'select', options => $comp_options,    extra => $pinned->($sel_comp,    \%comp_have)
