@@ -154,16 +154,49 @@ sub run ($self, $params) {
 
     my $db = $self->{sqlite}->db;
 
-    my $count = $db->query(
-        "SELECT COUNT(DISTINCT r.id) AS n $from $where",
-        @$bind,
-    )->hash->{n} // 0;
+    # Config join produces duplicate report rows; need DISTINCT + separate
+    # COUNT(DISTINCT) since window functions can't do COUNT(DISTINCT) OVER().
+    if ($from =~ /JOIN config/) {
+        my $count = $db->query(
+            "SELECT COUNT(DISTINCT r.id) AS n $from $where",
+            @$bind,
+        )->hash->{n} // 0;
 
+        my $rows = $db->query(
+            "SELECT DISTINCT r.* $from $where "
+          . "ORDER BY r.plevel DESC, r.smoke_date DESC LIMIT ? OFFSET ?",
+            @$bind, $rpp, $offset,
+        )->hashes->to_array;
+
+        return {
+            reports          => $rows,
+            report_count     => $count,
+            page             => $page,
+            reports_per_page => $rpp,
+        };
+    }
+
+    # No config join: each report row is unique, so fold the count into
+    # the data query via COUNT(*) OVER() (same pattern as Reports::latest).
     my $rows = $db->query(
-        "SELECT DISTINCT r.* $from $where "
+        "SELECT r.*, COUNT(*) OVER() AS _total_count $from $where "
       . "ORDER BY r.plevel DESC, r.smoke_date DESC LIMIT ? OFFSET ?",
         @$bind, $rpp, $offset,
     )->hashes->to_array;
+
+    my $count;
+    if (@$rows) {
+        $count = delete $rows->[0]{_total_count};
+        delete $_->{_total_count} for @$rows;
+    }
+    elsif ($page > 1) {
+        $count = $db->query(
+            "SELECT COUNT(*) AS n $from $where", @$bind,
+        )->hash->{n} // 0;
+    }
+    else {
+        $count = 0;
+    }
 
     return {
         reports          => $rows,
