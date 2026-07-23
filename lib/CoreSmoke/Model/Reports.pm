@@ -470,6 +470,8 @@ sub _sort_perl_ids_desc ($list) {
         sort {
             my @a = split /\./, $a;
             my @b = split /\./, $b;
+            $a[0] =~ s/^v//;
+            $b[0] =~ s/^v//;
             my $n = $#a > $#b ? $#a : $#b;
             my $cmp = 0;
             for my $i (0 .. $n) {
