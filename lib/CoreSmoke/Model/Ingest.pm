@@ -40,6 +40,12 @@ sub post_report ($self, $raw, %opts) {
 
     my ($data, $files) = $self->_normalize($raw);
 
+    # Prevent client-injected values for server-computed columns.
+    # _normalize blindly flattens sysinfo, so a payload like
+    # {"sysinfo":{"API_TOKEN_ID":"42"}} would land in $data and survive
+    # to _insert_report, faking authentication provenance.
+    delete $data->{api_token_id};
+
     # Compute plevel + report_hash.
     $data->{plevel}      = CoreSmoke::Model::Plevel::from_git_describe(
         $data->{git_describe} // '',

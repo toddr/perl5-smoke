@@ -143,4 +143,53 @@ subtest 'JSONRPC post_report without token' => sub {
     is $row->{api_token_id}, undef, 'JSONRPC without token -> NULL';
 };
 
+subtest 'sysinfo injection: api_token_id in sysinfo is stripped' => sub {
+    my $data = unique_fixture();
+    # Inject api_token_id via sysinfo (the _normalize flatten path)
+    $data->{sysinfo}{api_token_id} = $tok_id;
+    $t->post_ok('/api/report', json => { report_data => $data })
+        ->status_is(200);
+
+    my $rid = $t->tx->res->json->{id};
+    ok $rid, 'report ingested despite injected api_token_id';
+    my $row = $h->app->sqlite->db->query(
+        "SELECT api_token_id FROM report WHERE id = ?", $rid
+    )->hash;
+    is $row->{api_token_id}, undef,
+        'injected api_token_id via sysinfo is stripped';
+};
+
+subtest 'sysinfo injection: uppercase API_TOKEN_ID is also stripped' => sub {
+    my $data = unique_fixture();
+    $data->{sysinfo}{API_TOKEN_ID} = $tok_id;
+    $t->post_ok('/api/report', json => { report_data => $data })
+        ->status_is(200);
+
+    my $rid = $t->tx->res->json->{id};
+    ok $rid, 'report ingested despite uppercase injected field';
+    my $row = $h->app->sqlite->db->query(
+        "SELECT api_token_id FROM report WHERE id = ?", $rid
+    )->hash;
+    is $row->{api_token_id}, undef,
+        'uppercase API_TOKEN_ID via sysinfo is stripped';
+};
+
+subtest 'sysinfo injection with valid Bearer: real token wins' => sub {
+    my $data = unique_fixture();
+    # Try to inject a different token ID via sysinfo
+    $data->{sysinfo}{api_token_id} = 99999;
+    $t->post_ok('/api/report',
+        { Authorization => "Bearer $token" },
+        json => { report_data => $data },
+    )->status_is(200);
+
+    my $rid = $t->tx->res->json->{id};
+    ok $rid, 'ingest succeeded with valid Bearer + injected sysinfo';
+    my $row = $h->app->sqlite->db->query(
+        "SELECT api_token_id FROM report WHERE id = ?", $rid
+    )->hash;
+    is $row->{api_token_id}, $tok_id,
+        'valid Bearer token overrides sysinfo injection';
+};
+
 done_testing;
