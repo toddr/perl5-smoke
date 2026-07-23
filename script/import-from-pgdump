@@ -423,7 +423,7 @@ sub pg_ts_to_iso ($ts) {
         my ($date, $time, $sign, $h, $m) = ($1, $2, $3, $4, $5 // 0);
         $time =~ s/\.\d+$//;   # drop fractional seconds
         my $offset_secs = ($h * 3600 + $m * 60) * ($sign eq '+' ? 1 : -1);
-        my $tp = Time::Piece->strptime("$date $time", '%Y-%m-%d %H:%M:%S');
+        my $tp = gmtime->strptime("$date $time", '%Y-%m-%d %H:%M:%S');
         $tp -= $offset_secs;   # convert to UTC
         return $tp->strftime('%Y-%m-%dT%H:%M:%SZ');
     }
