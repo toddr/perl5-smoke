@@ -47,7 +47,7 @@ insert_report(
 # -- Model::Reports::latest -- rpp capped at 500 -------------------
 
 my $data = $h->app->reports->latest({ reports_per_page => 9999, page => 1 });
-is $data->{rpp}, 500, 'latest: reports_per_page capped at 500';
+is $data->{reports_per_page}, 500, 'latest: reports_per_page capped at 500';
 
 # -- Model::Reports::latest -- page floored at 1 -------------------
 
@@ -83,7 +83,7 @@ $t->get_ok('/search?reports_per_page=9999&page=-1')
 
 $t->get_ok('/api/latest?reports_per_page=9999&page=-1')
   ->status_is(200)
-  ->json_is('/rpp'  => 500, 'API latest: rpp capped at 500')
+  ->json_is('/reports_per_page' => 500, 'API latest: reports_per_page capped at 500')
   ->json_is('/page' => 1,   'API latest: page clamped to 1');
 
 $t->get_ok('/api/searchresults?reports_per_page=9999&page=-1')

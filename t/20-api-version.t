@@ -21,7 +21,7 @@ $t->get_ok('/api/version')->status_is(200)
 $t->get_ok('/api/latest')->status_is(200)
   ->json_is('/report_count' => 0)
   ->json_is('/page'         => 1)
-  ->json_is('/rpp'          => 25);
+  ->json_is('/reports_per_page' => 25);
 
 $t->get_ok('/api/searchparameters')->status_is(200)
   ->json_has('/sel_arch_os_ver')

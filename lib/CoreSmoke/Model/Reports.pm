@@ -90,7 +90,7 @@ sub latest ($self, $params = {}) {
         reports          => $rows,
         report_count     => $total,
         latest_plevel    => $latest_plevel  // '',
-        rpp              => $rpp,
+        reports_per_page => $rpp,
         page             => $page,
     };
 }
