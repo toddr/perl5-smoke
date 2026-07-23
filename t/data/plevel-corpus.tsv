@@ -48,6 +48,16 @@ v5.39.10-3-g1234567	5.039010zzz003
 v5.36.0	5.036000zzz000
 v5.32.1	5.032001zzz000
 
+# Edge: large commit-ahead counts
+v5.41.10-999-gabcdef0	5.041010zzz999
+v5.42.0-1000-g1234567	5.042000zzz100
+
+# Edge: single-digit minor/patch
+v5.8.0	5.008000zzz000
+v5.8.9	5.008009zzz000
+v5.10.0	5.010000zzz000
+v5.10.1	5.010001zzz000
+
 # (Edge: shorter inputs like `v5.42` are malformed for the legacy PG
 # function — it would return NULL via NULL-propagating lpad. We don't
 # emit those, so we don't pin them in the corpus.)
