@@ -29,16 +29,15 @@ jobs:
 
       - uses: actions/checkout@v6
 
+      # cpanfile.snapshot is used by the Docker build (Carton).
+      # In CI, cpm detects it and tries Carton::Snapshot which isn't
+      # installed. Remove it so cpm uses the 02packages resolver.
+      - run: rm -f cpanfile.snapshot
+
       - name: install CPAN deps from cpanfile (+ develop)
         uses: perl-actions/install-with-cpm@v2
         with:
           cpanfile: cpanfile
-          # Skip the snapshot resolver: install-with-cpm@v2 reaches into
-          # Carton::Snapshot to validate the file, and Carton isn't on
-          # the host perl tree yet at this point. The prod image still
-          # gets snapshot-pinned deps via cpm in Dockerfile.base; tests
-          # are happy with the latest compatible versions from metacpan.
-          snapshot: false
           tests: false
           # ubuntu-latest has 4 vCPUs; 1.5x oversubscription keeps all
           # cores busy while individual workers are waiting on the

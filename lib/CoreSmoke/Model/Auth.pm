@@ -39,13 +39,23 @@ sub create_user ($self, $username, $password) {
     return { ok => 1 };
 }
 
+my $DUMMY_HASH;
+
+sub _dummy_hash {
+    return $DUMMY_HASH //= argon2id_pass(
+        '', urandom($ARGON2_SALT_LEN),
+        $ARGON2_T_COST, $ARGON2_M_COST, $ARGON2_PARALLEL, $ARGON2_TAG_SIZE,
+    );
+}
+
 sub verify_user ($self, $username, $password) {
     my $row = $self->{sqlite}->db->query(
         "SELECT password_hash FROM admin_user WHERE username = ?", $username,
     )->hash;
-    return unless $row;
-    return argon2id_verify($row->{password_hash}, $password . $self->{pepper})
-        ? 1 : undef;
+    my $hash = $row ? $row->{password_hash} : _dummy_hash();
+    return unless argon2id_verify($hash, $password . $self->{pepper});
+    return 1 if $row;
+    return;
 }
 
 sub list_users ($self) {
