@@ -28,6 +28,7 @@
     <td><%= $u->{updated_at} %></td>
     <td>
       <form method="POST" action="/admin/users/<%= $u->{id} %>/password" class="inline-form">
+        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
         <input class="input input-sm" type="password" name="password" placeholder="new password" autocomplete="new-password" required>
         <button type="submit" class="btn btn-secondary btn-sm">Update</button>
       </form>
@@ -35,6 +36,7 @@
     <td>
 %     if ($u->{username} ne $current_user) {
       <form method="POST" action="/admin/users/<%= $u->{id} %>/delete" style="display:inline">
+        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete user <%= $u->{username} %>?')">Delete</button>
       </form>
 %     }

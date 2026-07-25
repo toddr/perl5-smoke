@@ -15,9 +15,9 @@ sub login_page ($c) {
 }
 
 sub login ($c) {
-    my $token = $c->csrf_token;
-    my $submitted = $c->param('csrf_token') // '';
-    unless ($submitted eq $token) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
         return $c->render(template => 'admin/login', error => 'Invalid form submission.');
     }
 
@@ -70,8 +70,9 @@ sub token_new ($c) {
 }
 
 sub token_create ($c) {
-    my $csrf = $c->csrf_token;
-    unless (($c->param('csrf_token') // '') eq $csrf) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
         return $c->render(template => 'admin/token_new', error => 'Invalid form submission.');
     }
 
@@ -89,6 +90,12 @@ sub token_show ($c) {
 }
 
 sub token_cancel ($c) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
+        $c->flash(error => 'Invalid form submission.');
+        return $c->redirect_to('/admin/tokens');
+    }
     my $id = $c->stash('id');
     $c->app->auth->cancel_token($id);
     $c->redirect_to('/admin/tokens');
@@ -106,8 +113,9 @@ sub user_new ($c) {
 }
 
 sub user_create ($c) {
-    my $csrf = $c->csrf_token;
-    unless (($c->param('csrf_token') // '') eq $csrf) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
         return $c->render(template => 'admin/user_new', error => 'Invalid form submission.');
     }
 
@@ -126,6 +134,12 @@ sub user_create ($c) {
 }
 
 sub user_update_password ($c) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
+        $c->flash(error => 'Invalid form submission.');
+        return $c->redirect_to('/admin/users');
+    }
     my $id       = $c->stash('id');
     my $password = $c->param('password') // '';
 
@@ -144,6 +158,12 @@ sub user_update_password ($c) {
 }
 
 sub user_delete ($c) {
+    my $v = $c->validation;
+    $v->csrf_protect;
+    if ($v->has_error('csrf_token')) {
+        $c->flash(error => 'Invalid form submission.');
+        return $c->redirect_to('/admin/users');
+    }
     my $id = $c->stash('id');
 
     my $user = $c->app->sqlite->db->query(

@@ -12,6 +12,10 @@
 %   actions => $header_actions,
 % };
 
+% if (my $error = flash 'error') {
+  %= include 'components/alert', variant => 'danger', body => $error
+% }
+
 % if (!@$tokens) {
   %= include 'components/empty_state', title => 'No tokens yet', desc => 'Create your first API token to authenticate smoke report submissions.'
 % } else {
@@ -35,6 +39,7 @@
     <td>
 %     unless ($cancelled) {
       <form method="POST" action="/admin/tokens/<%= $tok->{id} %>/cancel" style="display:inline">
+        <input type="hidden" name="csrf_token" value="<%= csrf_token %>">
         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel this token?')">Cancel</button>
       </form>
 %     }
