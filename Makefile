@@ -15,8 +15,8 @@ PERL        ?= perl
 PROVE       ?= prove
 HYPNOTOAD   ?= hypnotoad
 MORBO       ?= morbo
-PERLCRITIC  ?= perlcritic
-COVER       ?= cover
+PERLCRITIC  ?= $(shell $(PERL) -MFile::Basename -e '$$d = dirname($$^X); print -x "$$d/perlcritic" ? "$$d/perlcritic" : "perlcritic"')
+COVER       ?= $(shell $(PERL) -MFile::Basename -e '$$d = dirname($$^X); print -x "$$d/cover" ? "$$d/cover" : "cover"')
 
 UNAME_S     := $(shell uname -s)
 BREW_PKGS   := xz
@@ -195,7 +195,7 @@ critic:
 
 cover:
 	$(COVER) -delete
-	HARNESS_PERL_SWITCHES=-MDevel::Cover=-silent,1,+ignore,^t/ $(PROVE) -lr t/
+	HARNESS_PERL_SWITCHES='-MDevel::Cover=-silent,1,+ignore,^t/,+ignore,^local/' $(PROVE) -lr t/
 	$(COVER)
 
 # ---------------------------------------------------------------------------
