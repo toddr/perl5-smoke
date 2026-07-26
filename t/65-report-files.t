@@ -64,4 +64,41 @@ is $rf->has_file($hash, 'not_a_field'), undef, 'has_file undef for unknown field
     my @tmps = glob("$dir2/*.tmp");
     is scalar @tmps, 0, 'no temp files after overwrite';
 }
+
+# -- read() by report ID --
+# The read($rid, $field) method resolves a report ID to its hash
+# via _hash_for_rid, then delegates to read_by_hash.
+subtest 'read by report ID' => sub {
+    my $t   = $h->t;
+    my $res = $h->ingest_fixture('idefix-gff5bbe677.jsn');
+    my $rid = $res->{id};
+    ok defined $rid, "ingested fixture has id=$rid";
+
+    my $db_row = $app->sqlite->db->query(
+        'SELECT report_hash FROM report WHERE id = ?', $rid,
+    )->hash;
+    ok $db_row, 'report row exists in DB';
+    my $rh = $db_row->{report_hash};
+
+    my $log_via_hash = $rf->read_by_hash($rh, 'log_file');
+    my $log_via_id   = $rf->read($rid, 'log_file');
+    is $log_via_id, $log_via_hash,
+       'read($rid, field) returns same bytes as read_by_hash';
+
+    is $rf->read(999999, 'log_file'), undef,
+       'read() with nonexistent report ID returns undef';
+
+    is $rf->read($rid, 'not_a_field'), undef,
+       'read() rejects unknown field name';
+};
+
+# -- fields() class method --
+subtest 'fields() returns expected list' => sub {
+    my @f = CoreSmoke::Model::ReportFiles->fields;
+    is scalar @f, 5, 'five fields';
+    is_deeply [sort @f],
+              [sort qw(log_file out_file manifest_msgs compiler_msgs nonfatal_msgs)],
+              'field names match';
+};
+
 done_testing;

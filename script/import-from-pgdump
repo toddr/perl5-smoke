@@ -9,10 +9,10 @@ use lib "$FindBin::Bin/../lib";
 use Getopt::Long qw(GetOptions);
 use File::Spec;
 use Digest::MD5 qw(md5_hex);
-use Time::Piece;
 use Mojo::SQLite;
 
 use CoreSmoke::Model::Plevel;
+use CoreSmoke::Util::PgDump qw(decode_copy_field pg_ts_to_iso);
 
 # ---------------------------------------------------------------------------
 # CLI
@@ -374,68 +374,8 @@ sub build_insert_sth ($dbh, $target) {
     return ($dbh->prepare($sql), $sql);
 }
 
-# ---------------------------------------------------------------------------
-# pg_dump COPY field decoding
-# Backslash escapes per Postgres COPY text format:
-#   \N -> NULL (only when the entire field is "\N")
-#   \\ -> \
-#   \t -> tab
-#   \n -> newline
-#   \r -> CR
-#   \b -> backspace
-#   \f -> form feed
-#   \v -> vertical tab
-# Hex/octal byte escapes (\xNN, \NNN) are unlikely in this dump and not used here.
-# ---------------------------------------------------------------------------
 
-sub decode_copy_field ($f) {
-    # NOTE: must be `return undef`, not bare `return`. This sub is called
-    # in list context inside `map { decode_copy_field($_) } @raw`, and
-    # bare `return` returns an empty list there -- which silently shrinks
-    # the result list and shifts the subsequent hash-slice assignment.
-    ## no critic (Subroutines::ProhibitExplicitReturnUndef)
-    return undef if $f eq '\\N';
-    ## use critic
-    return $f unless index($f, '\\') >= 0;
-    $f =~ s{\\(.)}{
-          $1 eq 'n' ? "\n"
-        : $1 eq 't' ? "\t"
-        : $1 eq 'r' ? "\r"
-        : $1 eq 'b' ? "\b"
-        : $1 eq 'f' ? "\f"
-        : $1 eq 'v' ? "\013"
-        : $1 eq '\\' ? "\\"
-        : $1
-    }ge;
-    return $f;
-}
-
-# ---------------------------------------------------------------------------
-# Postgres timestamp -> ISO 8601 UTC (e.g. "2024-05-08T10:23:11Z")
-# Input shape in this dump: "YYYY-MM-DD HH:MM:SS+OFFSET" where OFFSET is one
-# or two digits, optionally followed by ":MM". The dump only contains +01/+02.
-# ---------------------------------------------------------------------------
-
-sub pg_ts_to_iso ($ts) {
-    return unless defined $ts && length $ts;
-
-    if ($ts =~ /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}(?:\.\d+)?)([+-])(\d{1,2})(?::?(\d{2}))?$/) {
-        my ($date, $time, $sign, $h, $m) = ($1, $2, $3, $4, $5 // 0);
-        $time =~ s/\.\d+$//;   # drop fractional seconds
-        my $offset_secs = ($h * 3600 + $m * 60) * ($sign eq '+' ? 1 : -1);
-        my $tp = Time::Piece->strptime("$date $time", '%Y-%m-%d %H:%M:%S');
-        $tp -= $offset_secs;   # convert to UTC
-        return $tp->strftime('%Y-%m-%dT%H:%M:%SZ');
-    }
-
-    # Already-ISO-ish timestamp: leave it alone.
-    if ($ts =~ /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/) {
-        return $ts;
-    }
-
-    warn "[ts] unrecognised timestamp format: '$ts' (passing through)\n";
-    return $ts;
-}
+# decode_copy_field() and pg_ts_to_iso() live in CoreSmoke::Util::PgDump.
 
 sub _usage () {
     print <<~"USAGE";
