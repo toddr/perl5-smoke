@@ -26,18 +26,26 @@ in this repo is the source of truth from now on.
 
 ## Quick start (development)
 
+The `Makefile` handles dependency installation, dev server, test suite,
+and everything else. Run `make` with no arguments to see all targets.
+
 ```sh
-# install deps into local/
+make build              # install brew packages (macOS), cpan deps, vendored JS
+make dev                # morbo with auto-reload on http://localhost:3000
+make test               # prove -lr t/ (877 tests, sequential)
+make critic             # perlcritic --severity 5 lib/ script/
+
+make migrate            # create empty schema in data/development.db
+make dev-db SRC=dump.psql  # populate dev DB from a legacy pg_dump
+make create-admin USER=admin PASS=secret   # bootstrap an admin user
+```
+
+Raw commands (without `make`) still work:
+
+```sh
 cpm install -L local/
-
-# hot-reload dev server on http://localhost:3000
 PERL5LIB=local/lib/perl5:lib script/smoke morbo
-
-# run the test suite
 PERL5LIB=local/lib/perl5:lib prove -lr t/
-
-# run perlcritic at severity 5 (must be clean)
-PERL5LIB=local/lib/perl5:lib local/bin/perlcritic --severity 5 lib/
 ```
 
 ### macOS install gotchas
@@ -106,26 +114,37 @@ perl5-smoke/
 ├── legacy/                         # reference only -- the original three repos
 │   ├── sql/  api/  web/
 ├── lib/CoreSmoke/                  # the 2.0 app
-│   ├── App.pm                      # Mojolicious base class
-│   ├── Controller/                 # Api, JsonRpc, System, Ingest, Web
+│   ├── App.pm                      # Mojolicious base class, helpers, routing
+│   ├── Controller/                 # Api, JsonRpc, System, Ingest, Web, Admin
 │   ├── JsonRpc/Methods.pm          # shared method registry (REST + JSONRPC)
 │   ├── Model/                      # DB, Reports, Search, Matrix, Plevel,
-│   │                               #   ReportFiles, Ingest
+│   │                               #   ReportFiles, Ingest, Auth
 │   └── Schema/migrations.sql
 ├── templates/                      # Mojolicious EP templates
-├── public/                         # CSS + htmx
+│   ├── layouts/                    #   default layout (topbar + footer)
+│   ├── components/                 #   reusable design-system partials
+│   ├── web/                        #   page templates (latest, search, matrix, ...)
+│   ├── admin/                      #   admin UI (dashboard, tokens, users)
+│   └── partials/                   #   topbar menu, command palette
+├── public/                         # coresmoke.css, app.js, logo, htmx
 ├── script/
 │   ├── smoke                       # Mojolicious launcher
-│   └── import-from-pgdump          # one-shot legacy PG -> SQLite importer
+│   ├── migrate                     # create/upgrade SQLite schema
+│   ├── create-admin                # bootstrap admin user
+│   ├── fix-plevels                 # recompute plevel for all reports
+│   ├── import-from-pgdump          # legacy PG -> SQLite importer
+│   ├── import-report-files-tarball # place on-disk report files from tarball
+│   └── install-deps                # cpan dependency installer
 ├── etc/
 │   ├── coresmoke{,.development,.test,.production}.conf
-│   └── openapi.yaml                # hand-authored API spec
-├── t/                              # Test::Mojo suite (300+ tests)
+│   └── openapi.yaml                # API spec (served at /api/openapi/web.*)
+├── t/                              # Test::Mojo suite (870+ tests)
+├── docs/                           # current-state documentation
 ├── data/                           # gitignored: smoke.db, reports/, ...
 ├── plans/                          # the planning docs that drove the rewrite
 ├── cpanfile + cpanfile.snapshot
-├── Dockerfile + docker-compose.yml + .dockerignore
-└── .github/workflows/ci.yml        # prove + perlcritic + docker buildx + Trivy
+├── Dockerfile + Dockerfile.base + docker-compose.yml
+└── .github/workflows/              # ci.yml (test+docker) + base.yml (base image)
 ```
 
 ## API surface
@@ -141,6 +160,19 @@ Pre-1.81 Test::Smoke clients are supported via:
 - `POST /report` -- built-in alias for the legacy Fastly redirect target
 
 Both paths handle gzip request bodies (`Content-Encoding: gzip`).
+
+## Admin interface
+
+The web UI at `/admin` provides token and user management behind
+session-based authentication (Argon2id + pepper). Bootstrap the first
+admin user with `make create-admin USER=<name> PASS=<pw>`, then log in
+at `/admin/login`.
+
+- **Dashboard** -- report and token stats at a glance
+- **API tokens** -- create, inspect, and cancel bearer tokens for
+  authenticated ingest (`Authorization: Bearer <token>`)
+- **Users** -- create admins, change passwords, delete accounts (last
+  admin is protected)
 
 ## Operations
 
