@@ -13,6 +13,7 @@ sub latest ($c) {
     my $page = int($c->param('page') || 1);
     $page = 1 if $page < 1;
     my $rpp  = int($c->param('reports_per_page') || 25);
+    $rpp = 1   if $rpp < 1;
     $rpp = 500 if $rpp > 500;
 
     # Summary filter: all|pass|fail. Anything else is treated as 'all'
@@ -81,6 +82,7 @@ sub search ($c) {
     my $page    = int($filter{page}             || 1);
     $page = 1 if $page < 1;
     my $rpp     = int($filter{reports_per_page} || 25);
+    $rpp = 1   if $rpp < 1;
     $rpp = 500 if $rpp > 500;
 
     # Resolve `selected_perl=latest` once for the whole request via the
@@ -117,6 +119,9 @@ sub search ($c) {
             page             => $page,
             reports_per_page => $rpp,
             filter           => \%filter,
+            oob_summary      => 1,
+            oob_summary_id   => 'search-summary',
+            oob_summary_noun => 'reports',
         );
     }
 

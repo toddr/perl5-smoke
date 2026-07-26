@@ -47,6 +47,7 @@ sub version ($self) {
 # "the host has any failing run in history".
 sub latest ($self, $params = {}) {
     my $rpp  = int($params->{reports_per_page} || 25);
+    $rpp = 1   if $rpp < 1;
     $rpp = 500 if $rpp > 500;
     my $page = int($params->{page} || 1);
     $page = 1 if $page < 1;

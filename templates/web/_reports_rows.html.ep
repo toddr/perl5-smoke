@@ -56,5 +56,7 @@
 % if (stash('oob_summary')) {
 %   my $shown = $page * $reports_per_page;
 %   $shown = $report_count if $shown > $report_count;
-%= include 'components/pagination_summary', shown => $shown, total => $report_count, noun => 'hosts', id => 'latest-summary', oob => 1
+%   my $oob_id   = stash('oob_summary_id')   // 'latest-summary';
+%   my $oob_noun = stash('oob_summary_noun') // 'hosts';
+%= include 'components/pagination_summary', shown => $shown, total => $report_count, noun => $oob_noun, id => $oob_id, oob => 1
 % }
