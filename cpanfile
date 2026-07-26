@@ -9,11 +9,8 @@ requires 'DBD::SQLite',           '>= 1.78';
 requires 'Mojolicious::Plugin::Config';
 
 # misc
-requires 'JSON::PP',              '>= 4.16';
 requires 'Digest::MD5';
 requires 'Date::Parse';
-requires 'DateTime';
-requires 'DateTime::Format::SQLite';
 
 # request gzip + on-disk xz files
 requires 'IO::Compress::Gzip';
