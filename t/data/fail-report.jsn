@@ -1,0 +1,153 @@
+{
+   "skip_tests" : "",
+   "summary" : "FAIL(F)",
+   "un_position" : "bottom",
+   "log_file" : "Smoking patch 5.37.3\n\nConfiguration: -Dusedevel\nStarted: Jul 31 2022 at 12:00:00\nfinished: Jul 31 2022 at 12:30:00\n\nAll tests successful.\n...except some\n\nFailed 2 tests out of 2489, 99.92% okay.\n",
+   "is56x" : 0,
+   "harness3opts" : "",
+   "harness_only" : 0,
+   "v" : 1,
+   "outfile" : "mktest.out",
+   "out_file" : "op/magic.t............FAILED at test 42\n    Failed test at op/magic.t line 117\n    got: undef\n    expected: 42\nop/taint.t............FAILED at test 7\n    Failed test at op/taint.t line 55\n    got: ''\n    expected: 'tainted'\n",
+   "un_file" : "/home/tester/perl5coresmoke/etc/blead.usernote",
+   "defaultenv" : 0,
+   "lfile" : "/home/tester/perl5coresmoke/etc/blead.log",
+   "jsnfile" : "mktest.jsn",
+   "skipped_tests" : ["ext/POSIX/t/time.t"],
+   "compiler_msgs" : [
+      "util.c:42: warning: implicit declaration of function 'foo'",
+      "pp_sys.c:100: warning: unused variable 'sv'"
+   ],
+   "configs" : [
+      {
+         "duration" : 2800,
+         "arguments" : "",
+         "ccversion" : "gcc 12.2.0",
+         "cc" : "gcc",
+         "results" : [
+            {
+               "stat_cpu_time" : 600.5,
+               "failures" : [
+                  {
+                     "test" : "op/magic.t",
+                     "status" : "FAILED",
+                     "extra" : "Failed test 42\n    at op/magic.t line 117\n    got: undef\n    expected: 42"
+                  }
+               ],
+               "summary" : "F",
+               "locale" : null,
+               "statistics" : "u=10.00  s=5.00  cu=500.00  cs=85.50  scripts=2489  tests=1174000",
+               "io_env" : "stdio",
+               "stat_tests" : "1174000"
+            },
+            {
+               "statistics" : "u=8.00  s=6.00  cu=480.00  cs=80.00  scripts=2490  tests=1175032",
+               "io_env" : "perlio",
+               "stat_tests" : "1175032",
+               "failures" : [],
+               "stat_cpu_time" : 574.0,
+               "summary" : "O",
+               "locale" : null
+            },
+            {
+               "statistics" : "u=8.50  s=6.50  cu=490.00  cs=82.00  scripts=2490  tests=1175100",
+               "io_env" : "locale",
+               "stat_tests" : "1175100",
+               "stat_cpu_time" : 587.0,
+               "failures" : [
+                  {
+                     "test" : "op/taint.t",
+                     "status" : "FAILED",
+                     "extra" : "Failed test 7\n    at op/taint.t line 55"
+                  }
+               ],
+               "summary" : "F",
+               "locale" : "en_US.UTF-8"
+            }
+         ],
+         "started" : "2022-07-31 12:00:00 +0200",
+         "debugging" : "N"
+      },
+      {
+         "debugging" : "D",
+         "started" : "2022-07-31 13:30:00 +0200",
+         "results" : [
+            {
+               "failures" : [
+                  {
+                     "test" : "op/magic.t",
+                     "status" : "FAILED",
+                     "extra" : "Failed test 42\n    at op/magic.t line 117\n    got: undef\n    expected: 42"
+                  }
+               ],
+               "stat_cpu_time" : 650.0,
+               "locale" : null,
+               "summary" : "F",
+               "statistics" : "u=11.00  s=6.00  cu=550.00  cs=83.00  scripts=2489  tests=1174500",
+               "io_env" : "stdio",
+               "stat_tests" : "1174500"
+            },
+            {
+               "statistics" : "u=9.00  s=6.50  cu=500.00  cs=82.00  scripts=2491  tests=1175200",
+               "io_env" : "perlio",
+               "stat_tests" : "1175200",
+               "stat_cpu_time" : 597.5,
+               "failures" : [],
+               "summary" : "O",
+               "locale" : null
+            },
+            {
+               "locale" : "en_US.UTF-8",
+               "summary" : "O",
+               "stat_cpu_time" : 610.0,
+               "failures" : [],
+               "stat_tests" : "1175050",
+               "io_env" : "locale",
+               "statistics" : "u=9.50  s=7.00  cu=510.00  cs=83.50  scripts=2491  tests=1175050"
+            }
+         ],
+         "cc" : "gcc",
+         "arguments" : "-Dusethreads",
+         "ccversion" : "gcc 12.2.0",
+         "duration" : 3200
+      }
+   ],
+   "nonfatal_msgs" : ["Note: this is a nonfatal warning from the build"],
+   "hostname" : "failbox",
+   "cfg" : "/home/tester/perl5coresmoke/etc/blead.buildcfg",
+   "ddir" : "/home/tester/perl5coresmoke/perl-current",
+   "locale" : "en_US.UTF-8",
+   "manifest_msgs" : [
+      "MANIFEST did not declare '.mailmap'",
+      "MANIFEST did not declare 'extra_file.txt'"
+   ],
+   "showcfg" : 0,
+   "sysinfo" : {
+      "hostname" : "failbox",
+      "smoke_version" : "1.80",
+      "git_id" : "aabb112233445566778899aabb112233445566ee",
+      "cpu_description" : "Intel Core i7 (0)",
+      "lang" : null,
+      "duration" : 6000,
+      "smoker_version" : "0.050",
+      "smoke_branch" : "blead",
+      "architecture" : "x86_64",
+      "reporter" : "",
+      "username" : "tester",
+      "osname" : "linux",
+      "smoke_revision" : "1.80",
+      "reporter_version" : "0.055",
+      "git_describe" : "v5.37.2-50-gaabb112233",
+      "perl_id" : "5.37.3",
+      "test_jobs" : 4,
+      "cpu_count" : "8",
+      "user_note" : "",
+      "osversion" : "6.1.0-1-amd64 (Debian 12)",
+      "lc_all" : null,
+      "smoke_perl" : "5.36.0",
+      "config_count" : 2,
+      "smoke_date" : "2022-07-31 12:00:00 +0200"
+   },
+   "applied_patches" : ["PATCH-1234 Fix frobnicate", "PATCH-5678 Update docs"],
+   "rptfile" : "mktest.rpt"
+}
