@@ -24,7 +24,7 @@
   <td data-sort-key="host"><%= $r->{hostname} %></td>
   <td data-sort-key="arch"><%= $r->{architecture} %></td>
   <td data-sort-key="os"><%= $r->{osname} %> <%= $r->{osversion} %></td>
-  <td data-sort-key="perl"><code class="code-inline"><%= $r->{perl_id} %></code></td>
+  <td data-sort-key="perl" data-sort-value="<%= $r->{plevel} %>"><code class="code-inline"><%= $r->{perl_id} %></code></td>
   <td data-sort-key="status" data-sort-value="<%= lc($r->{summary} // '') %>" class="status-cell <%= $cell_tint %>">
     <a href="/report/<%= $r->{id} %>" aria-label="View report <%= $r->{id} %>">
       %= status_pill $r->{summary}
