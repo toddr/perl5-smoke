@@ -73,9 +73,11 @@ sub latest ($self, $params = {}) {
                  FROM report
                 GROUP BY hostname
                ) g USING (hostname, plevel)
-         WHERE r.smoke_date = (
-               SELECT MAX(smoke_date) FROM report
+         WHERE r.id = (
+               SELECT id FROM report
                 WHERE hostname = r.hostname AND plevel = r.plevel
+                ORDER BY smoke_date DESC, id DESC
+                LIMIT 1
                )$extra_where
          ORDER BY r.plevel DESC, r.smoke_date DESC
          LIMIT ? OFFSET ?
