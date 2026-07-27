@@ -73,7 +73,9 @@ sub reports_from_id ($c) {
 }
 
 sub reports_from_epoch ($c) {
-    return $c->render(json => $c->app->reports->reports_from_epoch($c->stash('epoch')));
+    return $c->render(json => $c->app->reports->reports_from_epoch(
+        $c->stash('epoch'), $c->param('limit') // 100,
+    ));
 }
 
 # OpenAPI spec served from etc/openapi.yaml. The yaml file is the source of

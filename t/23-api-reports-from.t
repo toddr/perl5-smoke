@@ -98,4 +98,40 @@ $t->get_ok("/api/reports_from_date/$future_epoch")
   ->status_is(200);
 is_deeply $t->tx->res->json, [], 'future epoch returns empty array';
 
+# ---- reports_from_date: limit parameter ----------------------------------
+
+$t->get_ok("/api/reports_from_date/$old_epoch?limit=1")
+  ->status_is(200);
+is scalar @{ $t->tx->res->json }, 1, 'reports_from_date limit=1 caps result';
+
+$t->get_ok("/api/reports_from_date/$old_epoch?limit=9999")
+  ->status_is(200);
+is scalar @{ $t->tx->res->json }, 2, 'reports_from_date limit>500 still returns all (capped at 500)';
+
+# ---- reports_from_date: non-numeric epoch returns empty ------------------
+
+$t->get_ok('/api/reports_from_date/abc')
+  ->status_is(200);
+is_deeply $t->tx->res->json, [], 'non-numeric epoch returns empty array';
+
+$t->get_ok('/api/reports_from_date/-1')
+  ->status_is(200);
+is_deeply $t->tx->res->json, [], 'negative epoch returns empty array';
+
+# ---- JSONRPC reports_from_date with limit --------------------------------
+
+$t->post_ok('/api', json => {
+    jsonrpc => '2.0', id => 1,
+    method  => 'reports_from_date',
+    params  => { epoch => $old_epoch, limit => 1 },
+})->status_is(200);
+is scalar @{ $t->tx->res->json->{result} }, 1, 'JSONRPC reports_from_date respects limit';
+
+$t->post_ok('/api', json => {
+    jsonrpc => '2.0', id => 2,
+    method  => 'reports_from_date',
+    params  => { epoch => 'notanumber' },
+})->status_is(200);
+is_deeply $t->tx->res->json->{result}, [], 'JSONRPC non-numeric epoch returns empty';
+
 done_testing;

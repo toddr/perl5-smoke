@@ -119,7 +119,7 @@ sub _list_methods ($c, $params) {
     },
     reports_from_date => {
         plugin => 'api',
-        call   => sub ($c, $p) { $c->app->reports->reports_from_epoch($p->{epoch}) },
+        call   => sub ($c, $p) { $c->app->reports->reports_from_epoch($p->{epoch}, $p->{limit} // 100) },
     },
     'api.version' => {
         plugin => 'api',

@@ -188,6 +188,9 @@ paths:
           name: epoch
           required: true
           schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 100, maximum: 500 }
       responses: { "200": { description: ok } }
 
   /api/report:
