@@ -3,6 +3,9 @@ use v5.42;
 use warnings;
 use experimental qw(signatures);
 
+use Exporter 'import';
+our @EXPORT_OK = qw(sort_perl_ids_desc);
+
 # Faithful port of public.git_describe_as_plevel() from the legacy Postgres
 # schema. Output must be byte-identical to the PG function for valid
 # git_describe inputs (see t/data/plevel-corpus.tsv).
@@ -55,6 +58,22 @@ sub _from_perl_id ($perl_id) {
 sub _lpad ($str, $len, $fill) {
     return substr($str, 0, $len) if length($str) > $len;
     return $fill x ($len - length($str)) . $str;
+}
+
+sub sort_perl_ids_desc ($list) {
+    return [
+        sort {
+            my @a = split /\./, $a;
+            my @b = split /\./, $b;
+            my $n = $#a > $#b ? $#a : $#b;
+            my $cmp = 0;
+            for my $i (0 .. $n) {
+                $cmp = ($b[$i] // 0) <=> ($a[$i] // 0);
+                last if $cmp;
+            }
+            $cmp;
+        } @$list
+    ];
 }
 
 1;

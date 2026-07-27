@@ -5,6 +5,7 @@ use experimental qw(signatures);
 
 use CoreSmoke::Model::Search;
 use CoreSmoke::Model::Matrix;
+use CoreSmoke::Model::Plevel qw(sort_perl_ids_desc);
 
 sub new ($class, %args) {
     my $sqlite       = $args{sqlite}       // die "sqlite required";
@@ -308,12 +309,12 @@ sub searchparameters ($self) {
                 SELECT DISTINCT smoke_branch FROM report ORDER BY smoke_branch
                 SQL
         ],
-        perl_versions => [
+        perl_versions => sort_perl_ids_desc([
             map { $_->{perl_id} }
             @{ $db->query(<<~'SQL')->hashes->to_array }
-                SELECT DISTINCT perl_id FROM report ORDER BY plevel DESC
+                SELECT DISTINCT perl_id FROM report
                 SQL
-        ],
+        ]),
     };
 }
 
@@ -462,24 +463,8 @@ sub _summary_buckets ($raw) {
     ];
 }
 
-# Sort "M.m.p" perl_id strings highest-to-lowest, RPM-style: split on
-# '.', compare each component numerically. SQL plevel ordering is
-# non-deterministic when DISTINCT collapses many plevels per perl_id.
-sub _sort_perl_ids_desc ($list) {
-    return [
-        sort {
-            my @a = split /\./, $a;
-            my @b = split /\./, $b;
-            my $n = $#a > $#b ? $#a : $#b;
-            my $cmp = 0;
-            for my $i (0 .. $n) {
-                $cmp = ($b[$i] // 0) <=> ($a[$i] // 0);
-                last if $cmp;
-            }
-            $cmp;
-        } @$list
-    ];
-}
+# Delegate to the canonical sort in Plevel.pm.
+sub _sort_perl_ids_desc ($list) { sort_perl_ids_desc($list) }
 
 sub matrix ($self, %opts) {
     return $self->_matrix->matrix(%opts);

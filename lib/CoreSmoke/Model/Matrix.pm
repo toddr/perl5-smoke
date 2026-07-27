@@ -3,6 +3,8 @@ use v5.42;
 use warnings;
 use experimental qw(signatures);
 
+use CoreSmoke::Model::Plevel qw(sort_perl_ids_desc);
+
 sub new ($class, %args) {
     my $sqlite = $args{sqlite} // die "sqlite required";
     return bless { sqlite => $sqlite }, $class;
@@ -22,13 +24,13 @@ sub new ($class, %args) {
 sub matrix ($self, %opts) {
     my $db = $self->{sqlite}->db;
 
-    my $perl_versions = [
+    my $all_ids = sort_perl_ids_desc([
         map { $_->{perl_id} }
         @{ $db->query(<<~'SQL')->hashes->to_array }
             SELECT DISTINCT perl_id FROM report
-             ORDER BY plevel DESC LIMIT 5
             SQL
-    ];
+    ]);
+    my $perl_versions = [ splice @$all_ids, 0, 5 ];
 
     return { perl_versions => [], rows => [] } unless @$perl_versions;
 
