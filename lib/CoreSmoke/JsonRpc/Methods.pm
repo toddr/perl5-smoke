@@ -85,10 +85,19 @@ sub _list_methods ($c, $params) {
                 // { error => 'Out file not found.' };
         },
     },
-    matrix    => { plugin => 'api', call => sub ($c, $p) { $c->app->reports->matrix } },
+    matrix    => {
+        plugin => 'api',
+        call   => sub ($c, $p) {
+            $c->app->reports->matrix(
+                include_stdio => ($p->{include_stdio} ? 1 : 0),
+            );
+        },
+    },
     submatrix => {
         plugin => 'api',
-        call   => sub ($c, $p) { $c->app->reports->submatrix($p->{test}, $p->{pversion}) },
+        call   => sub ($c, $p) {
+            $c->app->reports->submatrix($p->{test}, $p->{pversion}, $p->{limit});
+        },
     },
     searchparameters => {
         plugin => 'api',

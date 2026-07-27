@@ -44,13 +44,16 @@ sub outfile ($c) {
 }
 
 sub matrix ($c) {
-    return $c->render(json => $c->app->reports->matrix);
+    my $include_stdio = $c->param('include_stdio') ? 1 : 0;
+    return $c->render(json => $c->app->reports->matrix(include_stdio => $include_stdio));
 }
 
 sub submatrix ($c) {
     my $test = $c->param('test')
         // return $c->render(status => 422, json => { error => 'Missing test param.' });
-    return $c->render(json => $c->app->reports->submatrix($test, $c->param('pversion')));
+    return $c->render(json => $c->app->reports->submatrix(
+        $test, $c->param('pversion'), $c->param('limit'),
+    ));
 }
 
 sub searchparameters ($c) {
