@@ -211,6 +211,9 @@ sub full_report_data ($self, $rid) {
     # ---- Test failures grouped by test ------------------------------------
     # legacy renders each failing test once with the list of configurations
     # that hit it -- not once per (config, io_env). We mirror that.
+    # The DB schema allows UNIQUE(test, status, extra), so the same test
+    # can have different extra text across environments. We collect all
+    # distinct extras and expose them as an array.
     my %fail_seen;
     my @test_failures;
     for my $cfg (@{ $report->{configs} // [] }) {
@@ -222,10 +225,16 @@ sub full_report_data ($self, $rid) {
                         test    => $f->{test},
                         status  => $f->{status},
                         extra   => $f->{extra},
+                        extras  => [],
+                        _extra_seen => {},
                         configs => [],
                     };
                     $test_failures[-1];
                 };
+                my $ex = $f->{extra} // '';
+                if (length $ex && !$entry->{_extra_seen}{$ex}++) {
+                    push @{ $entry->{extras} }, $ex;
+                }
                 push @{ $entry->{configs} }, {
                     arguments => $cfg->{arguments} // '',
                     debugging => $cfg->{debugging},
@@ -235,6 +244,7 @@ sub full_report_data ($self, $rid) {
             }
         }
     }
+    delete $_->{_extra_seen} for @test_failures;
 
     # ---- Decoded on-disk extras -------------------------------------------
     # The matrix UI inlines compiler_msgs and manifest_msgs when present;

@@ -102,9 +102,13 @@
 %   } else {
 %     for my $f (@$failures) {
 %       my $alert_body = begin
-%         if (defined $f->{extra} && length $f->{extra}) {
-        %= include 'components/code_block', body => $f->{extra}
-%         }
+%       my @extras = @{ $f->{extras} // [] };
+%       if (!@extras && defined $f->{extra} && length $f->{extra}) {
+%         @extras = ($f->{extra});
+%       }
+%       for my $ex (@extras) {
+        %= include 'components/code_block', body => $ex
+%       }
 %         if (@{ $f->{configs} // [] }) {
         <p class="field-help">Configurations:</p>
         <ul class="link-list">
