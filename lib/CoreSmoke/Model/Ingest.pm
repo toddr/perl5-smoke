@@ -66,14 +66,15 @@ sub post_report ($self, $raw, %opts) {
 
     my $configs_in = $raw->{configs} // [];
 
-    my $tx = $self->{sqlite}->db->begin;
+    my $db = $self->{sqlite}->db;
+    my $tx = $db->begin;
     my $rid = eval {
-        my $id = $self->_insert_report($data);
+        my $id = $self->_insert_report($db, $data);
         for my $cfg (@$configs_in) {
-            my $cid = $self->_insert_config($id, $cfg);
+            my $cid = $self->_insert_config($db, $id, $cfg);
             for my $res (@{ $cfg->{results} // [] }) {
-                my $resid = $self->_insert_result($cid, $res);
-                $self->_insert_failures($resid, $res->{failures} // []);
+                my $resid = $self->_insert_result($db, $cid, $res);
+                $self->_insert_failures($db, $resid, $res->{failures} // []);
             }
         }
         $id;
@@ -176,7 +177,7 @@ sub _upsert_smoke_config ($self, $config) {
 # Inserts
 # ----------------------------------------------------------------------
 
-sub _insert_report ($self, $data) {
+sub _insert_report ($self, $db, $data) {
     my @cols = grep { exists $data->{$_} && defined $data->{$_} } @REPORT_COLS;
     # NOT NULL columns must always be present (ensure with sane defaults).
     for my $must_have (qw(smoke_date perl_id git_id git_describe hostname architecture osname osversion summary plevel report_hash)) {
@@ -188,15 +189,13 @@ sub _insert_report ($self, $data) {
     my $colnames     = join ',', @cols;
     my @vals         = @{$data}{@cols};
 
-    my $db = $self->{sqlite}->db;
     $db->query(
         "INSERT INTO report ($colnames) VALUES ($placeholders)", @vals,
     );
     return $db->dbh->last_insert_id(undef, undef, 'report', undef);
 }
 
-sub _insert_config ($self, $report_id, $cfg) {
-    my $db = $self->{sqlite}->db;
+sub _insert_config ($self, $db, $report_id, $cfg) {
     $db->query(<<~'SQL',
         INSERT INTO config (report_id, arguments, debugging, started, duration, cc, ccversion)
         VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -212,8 +211,7 @@ sub _insert_config ($self, $report_id, $cfg) {
     return $db->dbh->last_insert_id(undef, undef, 'config', undef);
 }
 
-sub _insert_result ($self, $config_id, $res) {
-    my $db = $self->{sqlite}->db;
+sub _insert_result ($self, $db, $config_id, $res) {
     $db->query(<<~'SQL',
         INSERT INTO result (config_id, io_env, locale, summary, statistics, stat_cpu_time, stat_tests)
         VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -229,8 +227,7 @@ sub _insert_result ($self, $config_id, $res) {
     return $db->dbh->last_insert_id(undef, undef, 'result', undef);
 }
 
-sub _insert_failures ($self, $result_id, $failures) {
-    my $db = $self->{sqlite}->db;
+sub _insert_failures ($self, $db, $result_id, $failures) {
     for my $f (@$failures) {
         next unless ref $f eq 'HASH';
         my $extra = $f->{extra};

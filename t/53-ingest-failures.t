@@ -36,7 +36,7 @@ my @failures = (
     { test => 'op/magic.t', status => 'FAILED', extra => 'some details' },
 );
 
-$ingest->_insert_failures($result->{id}, \@failures);
+$ingest->_insert_failures($db,$result->{id}, \@failures);
 
 my $first_fid = $db->query(
     "SELECT id FROM failure WHERE test = ? AND status = ?",
@@ -50,7 +50,7 @@ my $result2 = $db->query(
     $config->{id},
 )->hash;
 
-$ingest->_insert_failures($result2->{id}, \@failures);
+$ingest->_insert_failures($db,$result2->{id}, \@failures);
 
 my $second_fid = $db->query(
     "SELECT id FROM failure WHERE test = ? AND status = ?",
@@ -80,7 +80,7 @@ my $result3 = $db->query(
     $config->{id},
 )->hash;
 
-$ingest->_insert_failures($result3->{id}, [
+$ingest->_insert_failures($db,$result3->{id}, [
     { test => 'op/taint.t', status => 'FAILED', extra => 'taint check' },
 ]);
 
@@ -91,7 +91,7 @@ my $retrieved_id = $db->query(
 is $retrieved_id, $seeded_id, 'pre-seeded row reused (simulated concurrent insert)';
 
 # --- Test: undef extra normalised consistently ---
-$ingest->_insert_failures($result->{id}, [
+$ingest->_insert_failures($db,$result->{id}, [
     { test => 'op/null.t', status => 'FAILED', extra => undef },
 ]);
 
@@ -101,7 +101,7 @@ my $null_row = $db->query(
 ok $null_row, 'failure with undef extra inserted';
 
 # Insert again -- must not create a second row.
-$ingest->_insert_failures($result2->{id}, [
+$ingest->_insert_failures($db,$result2->{id}, [
     { test => 'op/null.t', status => 'FAILED', extra => undef },
 ]);
 my $null_count = $db->query(
@@ -133,7 +133,7 @@ is $null_count, 1, 'undef extra: deduplicated across calls';
     };
     use warnings qw(redefine once);
 
-    $ingest->_insert_failures($result4->{id}, \@efficiency_failures);
+    $ingest->_insert_failures($db,$result4->{id}, \@efficiency_failures);
     is $query_count, 6, '3 failures x 2 queries each = 6 total (no separate SELECT)';
 }
 
