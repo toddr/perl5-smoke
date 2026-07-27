@@ -63,6 +63,16 @@ $t->get_ok('/latest')->status_is(200)
   ->text_is('.stat:nth-child(4) .stat-value' => '1')
   ->text_is('.stat:nth-child(5) .stat-value' => '4');
 
+# --- PASS variant (e.g. with trailing info) should count as a pass ---
+insert_report(smoke_date => $recent, summary => 'PASS(X)',
+    report_hash => 'hero05', hostname => 'h5', git_id => 'g5');
+
+$t->get_ok('/latest')->status_is(200)
+  ->text_is('.stat:nth-child(3) .stat-value' => '3',
+            'PASS variant counted in pass_24h')
+  ->text_is('.stat:nth-child(5) .stat-value' => '5',
+            'total includes PASS variant');
+
 # --- HTMX request should NOT include hero stats ---
 $t->get_ok('/latest' => { 'HX-Request' => 'true' })->status_is(200)
   ->element_exists_not('.hero-meta');

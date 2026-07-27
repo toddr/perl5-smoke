@@ -43,7 +43,7 @@ sub latest ($c) {
                    SUM(CASE WHEN smoke_date >= datetime('now','-1 day')
                                  AND summary GLOB 'FAIL*' THEN 1 ELSE 0 END) AS fails_24h,
                    SUM(CASE WHEN smoke_date >= datetime('now','-1 day')
-                                 AND summary = 'PASS'     THEN 1 ELSE 0 END) AS pass_24h
+                                 AND summary GLOB 'PASS*' THEN 1 ELSE 0 END) AS pass_24h
             FROM report
         })->hash;
         %stats = map { $_ => ($row->{$_} // 0) } qw(total_reports fails_24h pass_24h);

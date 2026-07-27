@@ -204,7 +204,8 @@ sub _insert_config ($self, $report_id, $cfg) {
         $report_id,
         $cfg->{arguments}  // '',
         $cfg->{debugging}  // 'N',
-        _to_iso_utc($cfg->{started} // ''),
+        (defined $cfg->{started} && length $cfg->{started})
+            ? _to_iso_utc($cfg->{started}) : undef,
         $cfg->{duration},
         $cfg->{cc}        // '?',
         $cfg->{ccversion} // '?',

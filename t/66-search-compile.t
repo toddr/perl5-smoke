@@ -169,6 +169,34 @@ my $s     = CoreSmoke::Model::Search->new(sqlite => $sqlite);
     is_deeply $bind, ['UNKNOWN'], 'negated unknown bind unchanged';
 }
 
+# GLOB metacharacters in summary: bracket falls through to equality
+{
+    my ($from, $where, $bind) = $s->compile({ selected_summary => 'FAIL([)' });
+    like $where, qr/r\.summary = \?/, 'FAIL([) -> equality, not GLOB';
+    is_deeply $bind, ['FAIL([)'], 'metachar bracket: literal bind';
+}
+
+# GLOB metacharacters in summary: question mark falls through to equality
+{
+    my ($from, $where, $bind) = $s->compile({ selected_summary => 'FAIL(?)' });
+    like $where, qr/r\.summary = \?/, 'FAIL(?) -> equality, not GLOB';
+    is_deeply $bind, ['FAIL(?)'], 'metachar question: literal bind';
+}
+
+# GLOB metacharacters in summary: asterisk falls through to equality
+{
+    my ($from, $where, $bind) = $s->compile({ selected_summary => 'FAIL(])' });
+    like $where, qr/r\.summary = \?/, 'FAIL(]) -> equality, not GLOB';
+    is_deeply $bind, ['FAIL(])'], 'metachar close-bracket: literal bind';
+}
+
+# Multi-letter alpha FAIL codes still produce GLOB
+{
+    my ($from, $where, $bind) = $s->compile({ selected_summary => 'FAIL(Fm)' });
+    like $where, qr/r\.summary GLOB \?/, 'FAIL(Fm) -> GLOB (multi-alpha ok)';
+    is_deeply $bind, ['FAIL(*Fm*)'], 'multi-letter alpha bind';
+}
+
 # AND/NOT inversion on branch flips to inequality
 {
     my ($from, $where, $bind) = $s->compile({

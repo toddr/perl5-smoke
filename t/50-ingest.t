@@ -78,4 +78,32 @@ $t->get_ok("/api/outfile/$rid")->status_is(404);
 # Legacy /api/outfle typo alias -- must behave identically.
 $t->get_ok("/api/outfle/$rid")->status_is(404);
 
+# config.started stores NULL when the field is missing, not empty string
+{
+    my $payload = {
+        sysinfo    => { hostname => 'nulltest', architecture => 'x86_64',
+                        osname => 'linux', osversion => '6.1',
+                        perl_id => '5.40.0', git_id => 'null001',
+                        git_describe => 'v5.40.0-1-gnull001',
+                        smoke_date => '2024-01-15T12:00:00Z',
+                        smoke_branch => 'blead' },
+        summary    => 'PASS',
+        configs    => [{
+            arguments => '-Dusedevel',
+            cc        => 'gcc',
+            ccversion => '13.2',
+            results   => [{ io_env => 'perlio', summary => 'PASS',
+                            statistics => '1 test ok', failures => [] }],
+        }],
+    };
+    my $res = $t->post_ok('/api/report', json => { report_data => $payload })
+      ->status_is(200)->tx->res->json;
+    ok $res->{id}, 'ingested report without started field';
+
+    my $cfg = $h->app->sqlite->db->query(
+        "SELECT started FROM config WHERE report_id = ?", $res->{id}
+    )->hash;
+    ok !defined $cfg->{started}, 'config.started is NULL, not empty string';
+}
+
 done_testing;
